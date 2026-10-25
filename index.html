@@ -68,6 +68,15 @@ button:focus-visible,.btn:focus-visible{outline:2px solid var(--accent);outline-
 .feedback p{margin:0}
 .score{font-family:var(--display);font-size:3rem;line-height:1;font-variant-numeric:tabular-nums}
 .score small{font-size:1.2rem;color:var(--muted)}
+.hints{display:flex;flex-direction:column;gap:8px}
+.hints button{align-self:flex-start;font-size:.9rem;min-height:38px;padding:6px 14px;border-color:var(--brass);color:var(--brass)}
+.hints button:disabled{opacity:.5;cursor:default}
+.hints ol{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}
+.hints li{display:flex;gap:10px;align-items:baseline;font-size:.92rem;background:var(--accent-soft);border-radius:8px;padding:8px 12px}
+.hints li b{flex:none;font-size:.75rem;letter-spacing:.06em;color:var(--brass);font-weight:600}
+.stat{display:flex;gap:16px;flex-wrap:wrap;font-size:.9rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.stat b{color:var(--ink)}
+.tag{font-size:.75rem;color:var(--brass);font-weight:600}
 ul.plain{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
 ul.plain li{display:flex;gap:12px;align-items:baseline;padding:10px 0;border-bottom:1px solid var(--line)}
 ul.plain li:last-child{border-bottom:0}
@@ -122,7 +131,7 @@ ul.plain a{flex:none;color:var(--accent);font-size:.85rem;font-weight:500}
     <p class="note">'듣기'를 누르면 곡의 여러 구간 중 하나가 랜덤으로 재생돼요. 화면은 가려져 있고, 답을 고르면 영상이 보여요.</p>
     <div class="row">
       <button class="primary" id="start" style="flex:1">시작하기</button>
-      <button id="retry-wrong" hidden>틀린 문제만 (<span id="wrong-count">0</span>)</button>
+      <button id="retry-wrong" hidden>다시 들어볼 곡 (<span id="wrong-count">0</span>)</button>
     </div>
   </section>
 
@@ -138,6 +147,7 @@ ul.plain a{flex:none;color:var(--accent);font-size:.85rem;font-weight:500}
       <button id="peek" class="peek">광고가 나오면: 화면 잠깐 보기</button>
       <p class="note" id="listen-note"></p>
     </div>
+    <div class="hints"><button id="hint-btn">힌트 보기 (1/3)</button><ol id="hint-list"></ol></div>
     <div class="label">이 곡은?</div>
     <div class="choices" id="choices"></div>
     <div class="feedback" id="feedback" hidden>
@@ -151,14 +161,15 @@ ul.plain a{flex:none;color:var(--accent);font-size:.85rem;font-weight:500}
   <section id="view-result" class="card" hidden>
     <div class="label">결과</div>
     <div class="score" id="score"></div>
+    <div class="stat" id="stat"></div>
     <p class="meta" id="result-msg" style="margin:0"></p>
     <div id="wrong-wrap">
-      <div class="label">틀린 곡</div>
+      <div class="label">다시 들어볼 곡 (틀린 곡 + 힌트 쓴 곡)</div>
       <ul class="plain" id="wrong-list"></ul>
     </div>
     <div class="row">
       <button class="primary" id="again" style="flex:1">처음 화면으로</button>
-      <button id="again-wrong">틀린 문제 다시</button>
+      <button id="again-wrong">다시 들어볼 곡 풀기</button>
     </div>
   </section>
 
@@ -222,6 +233,9 @@ const D=[
 [48,"m0evC5OMofs",[31, 60, 362],"베토벤 피아노 협주곡 5번 ‘황제’ 1악장 (L. van Beethoven - <Piano Concerto No. 5 ‘Emperor’> 1st Mvt.)","C","협주곡","오케스트라가 큰 화음을 ‘쾅’ 치면 피아노가 화려한 카덴차로 응답, 이를 세 번 반복하며 시작.",[44,29,36]],
 [49,"XRCe86HVSJw",[0, 180, 360, 600],"베토벤 교향곡 9번 4악장 (L. van Beethoven - <Symphony No. 9> 4th Mvt.)","C","교향곡(합창)","‘환희의 송가’. 첼로·베이스가 주제를 조용히 꺼낸 뒤, 독창과 합창이 독일어로 부름.",[44,8,37]]
 ];
+const H={"1": ["남성 합창, 반주 없음", "중세 · 어둡고 엄숙함", "모두가 한 줄 선율만 함께 부르고, 박자가 일정하지 않고 자유롭게 흐름"], "2": ["무반주 혼성 합창(여러 성부)", "르네상스 · 고요하고 경건함", "한 성부가 부른 선율을 다른 성부가 차례로 따라 들어옴"], "3": ["작은 성악 앙상블(5명 안팎)", "르네상스 · 세속적이고 감정 표현이 풍부함", "가사 뜻에 따라 갑자기 느려지거나 화음이 짙어지는 등 표현이 극적임"], "4": ["독창 + 류트(또는 건반) 반주", "초기 바로크 · 부드럽고 애틋함", "합창이 아닌 한 사람의 노래가 중심이고, 반주는 화음만 짚어줌"], "5": ["바이올린 독주 + 현악 합주", "바로크 · 단조, 긴장감", "현악기가 같은 음을 짧게 반복하며 덜덜 떠는 소리가 겹겹이 쌓임"], "6": ["바이올린 독주 + 현악 합주", "바로크 · 장조, 경쾌한 3박자", "사냥 나팔을 흉내 낸 듯한 선율과 쫓기는 듯 빠른 바이올린"], "7": ["바이올린 독주 + 현악 합주", "바로크 · 장조, 밝고 화사함", "힘찬 합주 주제 뒤에 바이올린들이 트릴로 지저귀듯 연주"], "8": ["혼성 합창 + 관현악", "바로크 · 장조, 기쁘고 활기참", "한 음절을 빠르게 굴리는 선율 뒤, 합창 전체가 짧은 단어들을 힘차게 외침"], "9": ["고음 독창 + 현악", "바로크 · 느린 3박자, 애절함", "둘째 박에 무게가 실리는 느린 춤 리듬, 단순한 선율이 반복됨"], "10": ["독창 + 현악", "바로크 · 아주 느림, 평온함", "현악의 부드러운 도입 뒤 첫 음을 아주 길게 끌며 노래가 시작됨"], "11": ["하프시코드 독주", "바로크 · 빠르고 화려함", "한 음을 빠르게 여러 번 연타하고, 기타를 긁는 듯한 화음이 나옴"], "12": ["플루트 · 바이올린 · 하프시코드 + 현악", "바로크 · 장조, 활기찬 합주", "하프시코드가 반주를 넘어 주인공처럼 길고 화려하게 혼자 달림"], "13": ["소프라노 독창 + 리코더 2대", "바로크 · 목가적이고 평화로움", "리코더 두 대가 나란히 부드럽게 노래하며 반주함"], "14": ["혼성 합창 + 관현악", "바로크 · 장조, 따뜻하게 흐르는 느낌", "셋잇단음표로 끊임없이 흐르는 기악 선율 위에 합창이 느린 찬송가를 부름"], "15": ["현악 합주", "바로크 · 느리고 고요함", "위에서는 긴 음이 길게 이어지고, 아래 베이스는 옥타브로 또박또박 걸어감"], "16": ["건반 독주", "바로크 · 잔잔하고 명상적", "뚜렷한 선율 없이 같은 모양의 분산화음 패턴이 반복되며 화음만 바뀜"], "17": ["바이올린 2대 + 현악", "바로크 · 느리고 서정적", "두 바이올린이 같은 선율을 시간차로 주고받으며 엇갈림"], "18": ["건반 독주", "바로크 · 느린 3박자, 섬세함", "꾸밈음이 아주 많이 달린 우아한 선율"], "19": ["첼로 한 대, 반주 없음", "바로크 · 장조, 잔잔하게 흐름", "낮은 음과 높은 음을 오가는 분산화음이 물결치듯 반복됨"], "20": ["파이프 오르간 독주", "바로크 · 단조, 강렬하고 웅장함", "높은 음의 짧은 꾸밈음 뒤 낮은 곳으로 쏟아져 내려가는 도입"], "21": ["오보에 독주 + 현악", "바로크 · 단조, 느리고 구슬픔", "현악이 조용히 화음을 짚는 위로 오보에가 길게 노래함"], "22": ["피아노 독주", "고전 · 장조, 쉽고 경쾌함", "도-미-솔 화음을 오르내리는 짧고 단순한 행진곡풍 주제"], "23": ["피아노 독주", "고전 · 장조, 활발함", "화음을 힘차게 친 뒤 빠른 음계와 아르페지오로 달림"], "24": ["관현악", "고전 · 장조, 조용하고 소박함", "작게 반복되던 단순한 주제 끝에 갑자기 아주 큰 화음이 터짐"], "25": ["관현악", "고전 · 장조, 차분하게 걷는 느낌", "바순과 현악 피치카토가 일정한 똑딱 리듬을 계속 반복함"], "26": ["현악기 4대", "고전 · 장조, 밝고 상쾌함", "아래 세 악기가 짧게 끊어 반주하고, 제1바이올린이 높은 음역에서 날아오르듯 노래함"], "27": ["현악기 4대", "고전 · 장조, 느리고 장엄한 찬가", "하나의 찬가 선율을 악기들이 돌아가며 맡고, 나머지가 그 주위를 장식함"], "28": ["첼로 독주 + 관현악", "고전 · 장조, 밝고 당당함", "오케스트라 도입 뒤 첼로가 높은 음역까지 화려하게 움직임"], "29": ["트럼펫 독주 + 관현악", "고전 · 장조, 빠르고 경쾌함", "같은 주제가 계속 되돌아오고, 트럼펫이 빠른 음을 가볍게 굴림"], "30": ["피아노 독주", "고전 · 장조, 귀엽고 단순함", "아주 익숙한 동요 선율이 나오고, 이어 점점 화려하게 모양이 바뀜"], "31": ["관현악", "고전 · 단조, 불안하고 빠름", "서두 없이 바이올린이 짧은 한숨 같은 동기를 빠르게 반복하며 시작함"], "32": ["관현악", "고전 · 단조, 격렬함", "현악 전체가 당김음으로 쿵쿵 시작하고, 오보에가 길게 울림"], "33": ["현악 합주", "고전 · 장조, 밝고 우아함", "모두 함께 위로 치솟는 화음 동기로 힘차게 시작함"], "34": ["혼성 합창 + 관현악", "고전 · 단조, 슬프고 장중함", "현악이 흐느끼듯 짧게 끊는 음형 위에 합창이 한 단계씩 올라가며 커짐"], "35": ["혼성 합창 + 관현악", "고전 · 단조, 위엄 있고 무서움", "오케스트라의 날카로운 부점 리듬 뒤 합창이 짧은 한 마디를 크게 외침"], "36": ["피아노 독주 + 관현악", "고전 · 장조, 꿈꾸듯 서정적", "약음기 낀 현악의 셋잇단 반주 위로 피아노가 노래함"], "37": ["혼성 합창 + 관현악 + 타악기", "고전 · 장조, 떠들썩한 축제 분위기", "심벌즈 · 트라이앵글 · 큰북이 요란하게 울리는 이국풍 소리"], "38": ["소프라노 독창 + 관현악", "고전 · 단조, 분노에 찬 격렬함", "아주 높은 음에서 짧게 끊어 굴리는 기교가 연달아 나옴"], "39": ["바이올린 독주 + 관현악", "고전 · 장조, 밝고 화사함", "밝은 오케스트라 뒤 바이올린 독주가 처음엔 느리게 들어왔다가 빠르게 바뀜"], "40": ["피아노 독주", "고전 · 장조, 깔끔하고 단정함", "왼손이 도-솔-미-솔 반주를 반복하고, 오른손 선율 뒤 음계가 내달림"], "41": ["피아노 독주", "고전 · 단조로 시작, 빠르고 경쾌함", "빠르고 짧은 음표들 뒤, 왼손이 쿵짝쿵짝 군악대처럼 두드림"], "42": ["피아노 독주", "고전 · 단조, 비장하고 어두움", "왼손이 같은 화음을 쾅쾅 반복하는 위로 오른손이 비장한 선율을 연주함"], "43": ["클라리넷 독주 + 관현악", "고전 · 장조, 느리고 따뜻함", "둥글고 부드러운 목관 음색이 느린 선율을 길게 노래함"], "44": ["대규모 관현악(금관 강조)", "고전 · 장조, 승리감과 환희", "금관이 가세해 팡파르처럼 도-미-솔이 힘차게 터짐"], "45": ["바이올린 + 피아노", "고전 · 장조, 밝고 화창함", "바이올린이 유려하게 노래하는 선율로 바로 시작함"], "46": ["피아노 독주", "고전 · 장조, 느리고 따뜻함", "가운데 음역에서 노래하듯 흐르는 선율, 아래에서 잔잔한 반주"], "47": ["피아노 독주", "고전 · 단조, 격정적", "쉬지 않고 휘몰아치는 빠른 음표, 끝으로 갈수록 더 빨라짐"], "48": ["피아노 독주 + 관현악", "고전 · 장조, 웅장하고 당당함", "오케스트라가 큰 화음을 치면 피아노가 화려한 즉흥풍 패시지로 응답함"], "49": ["관현악 + 독창 + 합창", "고전 · 장조, 장대함", "단순한 주제가 낮은 현에서 조용히 나와 점점 커지고, 결국 사람 목소리가 함께함"]};
+const HL=["편성","분위기","특징"];
+let hintN=0,clean=0,hinted=[];
 const S=D.map(d=>({no:d[0],vid:d[1],t:d[2],title:d[3],era:d[4],genre:d[5],clue:d[6],conf:d[7]}));
 const byNo=Object.fromEntries(S.map(s=>[s.no,s]));
 const $=id=>document.getElementById(id);
@@ -250,13 +264,14 @@ function makeChoices(s){
   while(pool.length<3)pool.push(others.shift());
   return shuffle([s.no,...pool]).map(n=>byNo[n]);
 }
-function start(list){queue=shuffle(list);idx=0;score=0;wrongs=[];show("q");render()}
+function start(list){queue=shuffle(list);idx=0;score=0;wrongs=[];clean=0;hinted=[];show("q");render()}
 function render(){
   const s=queue[idx];
   $("prog-text").textContent=`${idx+1} / ${queue.length}`;
   $("score-live").textContent=`맞힌 수 ${score}`;
   $("bar").style.width=`${idx/queue.length*100}%`;
   $("qno").textContent=`Q${idx+1}.`;
+  hintN=0;$("hint-list").innerHTML="";$("hint-btn").hidden=false;$("hint-btn").disabled=false;$("hint-btn").textContent="힌트 보기 (1/3)";
   pt=Math.floor(Math.random()*s.t.length);answered=false;$("cover").hidden=false;setPeek(false);$("peek").hidden=false;if(ready)player.stopVideo();setListen(s);
   $("other").hidden=s.t.length<2;
   $("feedback").hidden=true;
@@ -292,9 +307,10 @@ function answer(s,c,btn){
   const ok=c.no===s.no;
   [...$("choices").children].forEach(b=>{b.disabled=true;if(+b.dataset.no===s.no)b.classList.add("correct")});
   if(!ok)btn.classList.add("wrong");
-  if(ok)score++;else wrongs.push(s);
-  const w=new Set(store.get());ok?w.delete(s.no):w.add(s.no);store.set([...w]);
-  $("verdict").textContent=ok?"정답이에요!":"아쉬워요. 정답은 아래 곡이에요.";
+  if(ok){score++;if(hintN)hinted.push(s);else clean++}else wrongs.push(s);
+  const w=new Set(store.get());ok&&!hintN?w.delete(s.no):w.add(s.no);store.set([...w]);
+  $("verdict").textContent=ok?(hintN?`정답이에요! (힌트 ${hintN}개 사용)`:"정답이에요! 힌트 없이 맞혔어요."):"아쉬워요. 정답은 아래 곡이에요.";
+  $("hint-btn").hidden=true;
   $("verdict").className="verdict "+(ok?"ok":"bad");
   $("meta").textContent=`${s.title} · ${E[s.era]} · ${s.genre}`;
   $("explain").textContent="구별 포인트: "+s.clue;
@@ -308,9 +324,12 @@ function finish(){
   $("score").innerHTML=`${score}<small> / ${queue.length}</small>`;
   const r=score/queue.length;
   $("result-msg").textContent=r===1?"전부 맞혔어요. 실전도 이대로만!":r>=.8?"거의 다 왔어요. 틀린 곡만 한 번 더 들어보세요.":r>=.5?"절반 넘게 맞혔어요. 곡 목록에서 구별 포인트를 복습해 보세요.":"아직 헷갈리는 곡이 많아요. 곡 목록에서 하나씩 들어보고 다시 도전해 보세요.";
-  $("wrong-wrap").hidden=!wrongs.length;$("again-wrong").hidden=!wrongs.length;
+  $("stat").innerHTML=`<span>힌트 없이 맞힘 <b>${clean}</b></span><span>힌트 쓰고 맞힘 <b>${hinted.length}</b></span><span>틀림 <b>${wrongs.length}</b></span>`;
+  const review=[...wrongs,...hinted];
+  $("wrong-wrap").hidden=!review.length;$("again-wrong").hidden=!review.length;
   const ul=$("wrong-list");ul.innerHTML="";
   wrongs.forEach(s=>ul.appendChild(item(s)));
+  hinted.forEach(s=>{const li=item(s);const t=document.createElement("span");t.className="tag";t.textContent=" 힌트 사용";li.querySelector(".t").prepend(t);ul.appendChild(li)});
 }
 function item(s){const li=document.createElement("li");
   li.innerHTML=`<span class="n">${s.no}</span><span class="t"></span><a target="_blank" rel="noopener">듣기</a>`;
@@ -322,7 +341,8 @@ function buildList(){const box=$("list");box.innerHTML="";
 
 $("start").onclick=()=>{let l=S.filter(s=>era==="all"||(era==="C"?s.era==="C":s.era!=="C"));start(shuffle(l).slice(0,Math.min(count,l.length)))};
 $("retry-wrong").onclick=()=>start(store.get().map(n=>byNo[n]).filter(Boolean));
-$("again-wrong").onclick=()=>start(wrongs.slice());
+$("again-wrong").onclick=()=>start([...wrongs,...hinted]);
+$("hint-btn").onclick=()=>{const s=queue[idx];if(hintN>=3)return;const li=document.createElement("li");li.innerHTML=`<b>${HL[hintN]}</b><span></span>`;li.querySelector("span").textContent=H[s.no][hintN];$("hint-list").appendChild(li);hintN++;$("hint-btn").textContent=hintN<3?`힌트 하나 더 (${hintN+1}/3)`:"힌트를 모두 봤어요";$("hint-btn").disabled=hintN>=3};
 $("tab-list").addEventListener("click",()=>{if(ready)player.stopVideo()});
 $("again").onclick=()=>{show("setup");refreshWrong()};
 $("tab-quiz").onclick=()=>{$("tab-quiz").setAttribute("aria-pressed",true);$("tab-list").setAttribute("aria-pressed",false);show("setup");refreshWrong()};
