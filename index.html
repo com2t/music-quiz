@@ -12,18 +12,18 @@
 :root{
   --bg:#eef1f4; --surface:#ffffff; --ink:#1b2433; --muted:#5d6878; --line:#cfd6df;
   --accent:#28456b; --accent-soft:#e1e8f2; --brass:#9a7428; --brass-soft:#f4ecdb;
-  --ok:#1f7a4d; --ok-soft:#e2f2e9; --bad:#b03a33; --bad-soft:#f8e4e2; --hl:#ff3d9a;
+  --ok:#1f7a4d; --ok-soft:#e2f2e9; --bad:#b03a33; --bad-soft:#f8e4e2; --hl:#ff3d9a; --hl-soft:#ffe3f0; --hl-ink:#b0185f;
   --display:"Gowun Batang","Noto Serif KR",Georgia,serif;
   --body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#121822; --surface:#1a2230; --ink:#e6eaf0; --muted:#9aa5b5; --line:#2f3a4b;
   --accent:#8fb0dc; --accent-soft:#223249; --brass:#d2ad62; --brass-soft:#2e2818;
-  --ok:#6fcf9b; --ok-soft:#173327; --bad:#ef8a83; --bad-soft:#3a1f1e; --hl:#ff6fb5; color-scheme:dark}}
+  --ok:#6fcf9b; --ok-soft:#173327; --bad:#ef8a83; --bad-soft:#3a1f1e; --hl:#ff6fb5; --hl-soft:#3d1c2c; --hl-ink:#ff9fcb; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#121822; --surface:#1a2230; --ink:#e6eaf0; --muted:#9aa5b5; --line:#2f3a4b;
   --accent:#8fb0dc; --accent-soft:#223249; --brass:#d2ad62; --brass-soft:#2e2818;
-  --ok:#6fcf9b; --ok-soft:#173327; --bad:#ef8a83; --bad-soft:#3a1f1e; --hl:#ff6fb5; color-scheme:dark}
+  --ok:#6fcf9b; --ok-soft:#173327; --bad:#ef8a83; --bad-soft:#3a1f1e; --hl:#ff6fb5; --hl-soft:#3d1c2c; --hl-ink:#ff9fcb; color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html{color-scheme:light}
@@ -217,6 +217,12 @@ ol.review .goto{align-self:flex-start;min-height:32px;font-size:.8rem;padding:2p
   .qgrid-wrap>summary{pointer-events:none;list-style:none;color:var(--muted)}
 }
 @media (min-width:700px) and (max-width:959px){.wrap{max-width:760px}}
+.taghead{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.flagbtn{min-height:34px;padding:4px 12px;font-size:.84rem;border-radius:999px;color:var(--muted)}
+.flagbtn[aria-pressed="true"]{background:var(--hl-soft);border-color:var(--hl);color:var(--hl-ink);font-weight:600}
+.qgrid button{position:relative}
+.qgrid button.flag::after{content:"?";position:absolute;top:-6px;right:-6px;width:16px;height:16px;border-radius:50%;background:var(--hl);color:#fff;font-size:.68rem;font-weight:700;line-height:16px;text-align:center}
+ol.review .flagtag{font-size:.72rem;font-weight:700;color:var(--hl-ink);background:var(--hl-soft);border-radius:999px;padding:1px 8px;margin-left:6px}
 @media (prefers-reduced-motion:reduce){.playing .eq i{animation:none;height:18px}.bar i{transition:none}}
 </style>
 </head>
@@ -330,7 +336,7 @@ ol.review .goto{align-self:flex-start;min-height:32px;font-size:.8rem;padding:2p
     <div class="exlist" id="mock-list"></div>
     <div class="exlist">
       <button id="mock-written">객관식만 풀기 <small>모의고사 50문항 중 랜덤 20</small></button>
-      <button id="mock-wrong" hidden>틀린 문제만 다시 <small id="mock-wrong-n"></small></button>
+      <button id="mock-wrong" hidden>틀린·모르는 문제 다시 <small id="mock-wrong-n"></small></button>
     </div>
   </section>
 
@@ -352,7 +358,7 @@ ol.review .goto{align-self:flex-start;min-height:32px;font-size:.8rem;padding:2p
       <div class="label" style="margin-top:8px">섞어서 풀기</div>
       <div class="exlist">
         <button id="ex-rand">객관식 랜덤 20문제 <small>전체</small></button>
-        <button id="ex-wrong" hidden>틀린 문제만 다시 <small id="ex-wrong-n"></small></button>
+        <button id="ex-wrong" hidden>틀린·모르는 문제 다시 <small id="ex-wrong-n"></small></button>
         <button id="ex-errata">정정 기록 보기 <small>필기·자료에서 바로잡은 것</small></button>
       </div>
       <p class="note">정답은 교수님 답안 기준이에요. 실제 사실과 다른 부분은 해설 아래 '참고'와 '정정'으로 표시했어요.</p>
@@ -384,7 +390,7 @@ ol.review .goto{align-self:flex-start;min-height:32px;font-size:.8rem;padding:2p
     <button id="exq-quit" class="bottom" style="font-size:.85rem;min-height:36px;align-self:flex-start">그만 풀고 목록으로</button>
     </div>
     <div class="main">
-    <div class="label" id="exq-tag"></div>
+    <div class="taghead"><div class="label" id="exq-tag"></div><button id="exq-flag" class="flagbtn" aria-pressed="false">? 모르는 문제</button></div>
     <p class="qtext" id="exq-text"></p>
     <div class="listen" id="exq-listen" hidden>
       <div class="player" id="ex-player-box"><div id="eyt"></div><div class="cover" id="ex-cover"><div class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div><strong>소리만 듣고 맞혀보세요</strong><span>소리가 안 나면 이 화면을 한 번 눌러보세요</span></div></div>
@@ -646,17 +652,18 @@ $("hint-btn").onclick=()=>{const s=queue[idx];if(hintN>=3)return;const li=docume
 let paper={origin:"mock",store:"mh-mockw"},exQueue=[],exI=0,exAns=[],exPt=0,ePlayer=null,eReady=false,eTimer=null,exResult=null;
 const qid=(e,q)=>e.id+":"+q.n;
 function paperStart(origin,list){if(!list.length)return;paper.origin=origin;paper.store=origin==="mock"?"mh-mockw":"mh-exw";
-  exQueue=list;exI=0;exAns=list.map(()=>({pick:null,memo:[],pad:[],padW:0,text:""}));exResult=null;
+  exQueue=list;exI=0;exAns=list.map(()=>({pick:null,memo:[],pad:[],padW:0,text:"",flag:false}));exResult=null;
   $("exq-confirm").hidden=true;buildGrid();$("qgrid-wrap").open=matchMedia("(min-width:960px)").matches;show("paper");exRender()}
 function paperBack(){exStop();if(paper.origin==="mock")mockMenu();else{show("babo");exMenu()}}
 $("exq-quit").onclick=paperBack;$("exr-menu").onclick=paperBack;
 function isDone(i){const a=exAns[i],{e}=exQueue[i];return e.kind==="short"?(a.pad.length>0||a.text.trim()!==""):a.pick!==null}
 function buildGrid(){const g=$("qgrid");g.innerHTML="";exQueue.forEach((x,i)=>{const b=document.createElement("button");b.textContent=i+1;b.onclick=()=>exGo(i);g.appendChild(b)})}
-function refreshGrid(){[...$("qgrid").children].forEach((b,i)=>{b.classList.toggle("done",isDone(i));b.classList.toggle("cur",i===exI)});
+function refreshGrid(){[...$("qgrid").children].forEach((b,i)=>{b.classList.toggle("done",isDone(i));b.classList.toggle("cur",i===exI);b.classList.toggle("flag",exAns[i].flag)});
   const n=exAns.filter((_,i)=>isDone(i)).length;$("exq-done").textContent=`푼 문제 ${n} / ${exQueue.length}`;$("exq-bar").style.width=`${n/exQueue.length*100}%`}
 function exSave(){const a=exAns[exI];if(!a)return;a.memo=INK["view-paper"].surf.strokes;if(exQueue[exI].e.kind==="short"){a.pad=pad.strokes;a.padW=padCv.clientWidth;a.text=$("pad-text").value}}
 function exGo(i){if(i<0||i>=exQueue.length)return;exSave();exI=i;exRender();$("view-paper").scrollIntoView({block:"start"})}
 $("exq-prev").onclick=()=>exGo(exI-1);
+$("exq-flag").onclick=()=>{const a=exAns[exI];a.flag=!a.flag;$("exq-flag").setAttribute("aria-pressed",a.flag);$("exq-flag").textContent=a.flag?"? 모르는 문제로 표시됨":"? 모르는 문제";refreshGrid()};
 $("exq-nextq").onclick=()=>{if(exI===exQueue.length-1){exSave();exAskSubmit()}else exGo(exI+1)};
 function exSong(){const q=exQueue[exI].q;return q.s?byNo[q.s[exPt%q.s.length]]:null}
 function exClip(){const s=exSong(),t=s.t[exPt%s.t.length],o={videoId:s.vid,startSeconds:t};if(CLIP)o.endSeconds=t+CLIP;return o}
@@ -683,6 +690,7 @@ function exRender(){
   else{$("exq-short").hidden=true;box.hidden=false;
     q.o.forEach((t,i)=>{const b=document.createElement("button");b.innerHTML=`<b>${"①②③④"[i]}</b><span></span>`;b.querySelector("span").textContent=t;if(a.pick===i+1)b.classList.add("sel");
       b.onclick=()=>{a.pick=a.pick===i+1?null:i+1;[...box.children].forEach((x,j)=>x.classList.toggle("sel",a.pick===j+1));refreshGrid()};box.appendChild(b)})}
+  $("exq-flag").setAttribute("aria-pressed",a.flag);$("exq-flag").textContent=a.flag?"? 모르는 문제로 표시됨":"? 모르는 문제";
   $("exq-prev").disabled=exI===0;$("exq-nextq").textContent=exI===exQueue.length-1?"채점하기 →":"다음 →";
   refreshGrid();
 }
@@ -695,30 +703,31 @@ $("exq-confirm-yes").onclick=()=>{exStop();exGrade()};
 function padImage(strokes,w){const cv=document.createElement("canvas");const W=w||600,Hh=180,dpr=window.devicePixelRatio||1;cv.width=W*dpr;cv.height=Hh*dpr;cv.style.aspectRatio=W+"/"+Hh;
   const ctx=cv.getContext("2d");ctx.scale(dpr,dpr);strokes.forEach(st=>drawStroke(ctx,st));return cv}
 function exGrade(){
-  exResult=exQueue.map((x,i)=>{const a=exAns[i];if(x.e.kind==="short")return{st:isDone(i)?"self":"none",self:null};
-    if(a.pick===null)return{st:"none"};return{st:x.q.a.includes(a.pick)?"ok":"bad"}});
+  exResult=exQueue.map((x,i)=>{const a=exAns[i],f=a.flag;if(x.e.kind==="short")return{st:isDone(i)?"self":"none",self:null,flag:f};
+    if(a.pick===null)return{st:"none",flag:f};return{st:x.q.a.includes(a.pick)?"ok":"bad",flag:f}});
   exStoreWrong();show("pres");exReview("all");
 }
 function exStoreWrong(){const w=new Set(LS.get(paper.store,[]));exQueue.forEach((x,i)=>{const r=exResult[i],k=qid(x.e,x.q);
-  if(r.st==="ok"||(r.st==="self"&&r.self===true))w.delete(k);else if(r.st==="bad"||r.st==="none"||(r.st==="self"&&r.self===false))w.add(k)});LS.set(paper.store,[...w])}
+  if(r.flag||r.st==="bad"||r.st==="none"||(r.st==="self"&&r.self===false))w.add(k);else if(r.st==="ok"||(r.st==="self"&&r.self===true))w.delete(k)});LS.set(paper.store,[...w])}
+const isWrongR=r=>r.st==="bad"||r.st==="none"||(r.st==="self"&&r.self===false);
+const needsReview=r=>isWrongR(r)||r.flag;
 function exScoreText(){const mc=exQueue.map((x,i)=>i).filter(i=>exQueue[i].e.kind!=="short");const sh=exQueue.map((x,i)=>i).filter(i=>exQueue[i].e.kind==="short");
   const ok=exResult.filter(r=>r.st==="ok"||(r.st==="self"&&r.self===true)).length;
   $("exr-score").innerHTML=`${ok}<small> / ${exQueue.length}</small>`;
   const c=k=>exResult.filter(r=>r.st===k).length;
-  $("exr-stat").innerHTML=`<span>맞음 <b>${c("ok")+exResult.filter(r=>r.st==="self"&&r.self===true).length}</b></span><span>틀림 <b>${c("bad")+exResult.filter(r=>r.st==="self"&&r.self===false).length}</b></span><span>안 푼 문제 <b>${c("none")}</b></span>`+(sh.length?`<span>주관식 채점 남음 <b>${exResult.filter(r=>r.st==="self"&&r.self===null).length}</b></span>`:"");
-  const wrong=exResult.filter(r=>r.st==="bad"||r.st==="none"||(r.st==="self"&&r.self===false)).length;$("exr-retry").hidden=!wrong}
+  $("exr-stat").innerHTML=`<span>맞음 <b>${c("ok")+exResult.filter(r=>r.st==="self"&&r.self===true).length}</b></span><span>틀림 <b>${c("bad")+exResult.filter(r=>r.st==="self"&&r.self===false).length}</b></span><span>안 푼 문제 <b>${c("none")}</b></span>`+`<span>모르는 문제 표시 <b>${exResult.filter(r=>r.flag).length}</b> (그중 맞힌 것 ${exResult.filter(r=>r.flag&&(r.st==="ok"||r.self===true)).length})</span>`+(sh.length?`<span>주관식 채점 남음 <b>${exResult.filter(r=>r.st==="self"&&r.self===null).length}</b></span>`:"");
+  const n=exResult.filter(needsReview).length;$("exr-retry").hidden=!n;$("exr-retry").textContent=`틀린·모르는 문제 다시 풀기 (${n})`}
 let exFilter="all";
 function exReview(f){exFilter=f;exScoreText();
-  chips("exr-filter",[["all","전체"],["wrong","틀린 것만"],["self","주관식만"]],f,v=>exReview(v));
+  chips("exr-filter",[["all","전체"],["review","틀린 것 + 모르는 것"],["flag","모르는 문제만"],["self","주관식만"]],f,v=>exReview(v));
   if(!exQueue.some(x=>x.e.kind==="short"))$("exr-filter").lastChild.remove();
   const ol=$("exr-list");ol.innerHTML="";
   exQueue.forEach((x,i)=>{const r=exResult[i],{e,q}=x,a=exAns[i];
-    const isWrong=r.st==="bad"||r.st==="none"||(r.st==="self"&&r.self===false);
-    if(f==="wrong"&&!isWrong)return;if(f==="self"&&e.kind!=="short")return;
+    if(f==="review"&&!needsReview(r))return;if(f==="flag"&&!r.flag)return;if(f==="self"&&e.kind!=="short")return;
     const li=document.createElement("li");const cls=r.st==="self"?(r.self===true?"ok":r.self===false?"bad":"self"):r.st;li.className=cls;
     const stT={ok:"정답",bad:"오답",none:"안 품",self:"직접 채점"}[cls]||"";
     li.innerHTML=`<div class="head"><span class="tag"></span><span class="st"></span></div><p class="q"></p><dl class="ans"></dl>`;
-    li.querySelector(".tag").textContent=`${i+1}. ${e.title} · ${q.n}번`;li.querySelector(".st").textContent=stT;li.querySelector(".q").textContent=q.q;
+    li.querySelector(".tag").textContent=`${i+1}. ${e.title} · ${q.n}번`;li.querySelector(".st").textContent=stT;if(r.flag){const t=document.createElement("span");t.className="flagtag";t.textContent=r.st==="ok"||r.self===true?"? 몰랐는데 맞힘":"? 모르는 문제";li.querySelector(".tag").appendChild(t)}li.querySelector(".q").textContent=q.q;
     const dl=li.querySelector(".ans");const add=(k,v)=>{const dt=document.createElement("dt");dt.textContent=k;const dd=document.createElement("dd");if(typeof v==="string")dd.textContent=v;else dd.appendChild(v);dl.append(dt,dd)};
     if(e.kind==="short"){
       const box=document.createElement("div");if(a.pad.length)box.appendChild(padImage(a.pad,a.padW));if(a.text.trim()){const p=document.createElement("div");p.textContent=a.text;box.appendChild(p)}
@@ -730,9 +739,9 @@ function exReview(f){exFilter=f;exScoreText();
       [["맞았어요",true],["틀렸어요",false]].forEach(([t,v])=>{const b=document.createElement("button");b.textContent=t;b.setAttribute("aria-pressed",r.self===v);b.className="chip";
         b.onclick=()=>{r.self=v;exStoreWrong();exReview(exFilter)};row.appendChild(b)});li.appendChild(row)}
     ol.appendChild(li)});
-  if(!ol.children.length){const li=document.createElement("li");li.className="ok";li.textContent=f==="wrong"?"틀린 문제가 없어요.":"해당하는 문제가 없어요.";ol.appendChild(li)}
+  if(!ol.children.length){const li=document.createElement("li");li.className="ok";li.textContent="해당하는 문제가 없어요.";ol.appendChild(li)}
 }
-$("exr-retry").onclick=()=>paperStart(paper.origin,exQueue.filter((_,i)=>{const r=exResult[i];return r.st==="bad"||r.st==="none"||(r.st==="self"&&r.self===false)}));
+$("exr-retry").onclick=()=>paperStart(paper.origin,exQueue.filter((_,i)=>needsReview(exResult[i])));
 
 /* ---------- 모의고사 ---------- */
 const MOCKX=MOCK.map(m=>{const e={id:m.id,title:m.title,kind:"mc"};const qs=[];
