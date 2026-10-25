@@ -83,6 +83,10 @@ button:focus-visible,.btn:focus-visible,summary:focus-visible{outline:2px solid 
 .lock{display:flex;flex-direction:column;gap:12px}
 .lock input{font:inherit;padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);min-height:44px;width:100%}
 .lock input:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.pwrow{display:flex;gap:8px}
+.pwrow input{flex:1;min-width:0}
+.pwrow button{flex:none;font-size:.88rem;min-width:64px}
+.pwrow button[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
 .check{display:flex;gap:8px;align-items:center;font-size:.88rem;color:var(--muted)}
 .err{color:var(--bad);font-size:.88rem;margin:0}
 .exlist{display:flex;flex-direction:column;gap:8px}
@@ -261,7 +265,7 @@ ul.plain .t small{display:block;color:var(--muted);font-size:.8rem}
       <div class="label">바보</div>
       <p class="note" style="margin:0">아는 사람만 들어올 수 있어요. 받은 비밀번호를 입력하세요.</p>
       <form id="ex-form" class="lock">
-        <input id="ex-pw" type="password" autocomplete="current-password" placeholder="비밀번호" aria-label="비밀번호">
+        <div class="pwrow"><input id="ex-pw" type="password" autocomplete="current-password" placeholder="비밀번호" aria-label="비밀번호"><button type="button" id="ex-eye" aria-pressed="false" aria-label="비밀번호 보기">보기</button></div>
         <label class="check"><input type="checkbox" id="ex-remember" style="width:auto;min-height:0"> 이 기기에서 기억하기</label>
         <button class="primary" id="ex-unlock" type="submit">열기</button>
         <p class="err" id="ex-err" hidden></p>
@@ -624,6 +628,7 @@ async function exTry(pw,silent){
   catch(e){if(!silent){$("ex-err").textContent=(e&&e.name==="OperationError")?"비밀번호가 맞지 않아요. 띄어쓰기와 하이픈(-)까지 그대로 입력했는지 확인해 주세요.":"자료를 불러오지 못했어요. 인터넷 연결을 확인하고 다시 눌러주세요.";$("ex-err").hidden=false}}
   finally{$("ex-unlock").disabled=false;$("ex-unlock").textContent="열기"}
 }
+$("ex-eye").onclick=()=>{const i=$("ex-pw"),on=i.type==="password";i.type=on?"text":"password";$("ex-eye").setAttribute("aria-pressed",on);$("ex-eye").textContent=on?"숨기기":"보기";$("ex-eye").setAttribute("aria-label",on?"비밀번호 숨기기":"비밀번호 보기");i.focus()};
 $("ex-form").addEventListener("submit",e=>{e.preventDefault();const pw=$("ex-pw").value.trim();if(pw)exTry(pw,false)});
 $("ex-lockagain").onclick=()=>{EX=null;LS.set("mh-expw",null);$("ex-pw").value="";$("ex-remember").checked=false;exPane("ex-lock")};
 function exAll(){const out=[];EX.exams.forEach(e=>e.qs.forEach(q=>out.push({e,q})));return out}
