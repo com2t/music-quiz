@@ -78,7 +78,7 @@ ul.plain a{flex:none;color:var(--accent);font-size:.85rem;font-weight:500}
 .era{font-family:var(--display);font-size:1.1rem;margin:8px 0 0;color:var(--brass)}
 .player{position:relative;width:100%;aspect-ratio:16/9;max-width:100%;border-radius:10px;overflow:hidden;background:var(--ink)}
 .player #yt,.player iframe{position:absolute;inset:0;width:100%;height:100%}
-.cover{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--accent);color:var(--surface);text-align:center;padding:16px}
+.cover{position:absolute;inset:0;pointer-events:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--accent);color:var(--surface);text-align:center;padding:16px}
 .cover strong{font-family:var(--display);font-size:1.4rem}
 .cover span{font-size:.85rem;opacity:.85}
 .peek{font-size:.85rem;color:var(--muted);min-height:38px;padding:6px 12px;align-self:flex-start}
@@ -133,7 +133,7 @@ ul.plain a{flex:none;color:var(--accent);font-size:.85rem;font-weight:500}
     </div>
     <div class="qno" id="qno"></div>
     <div class="listen">
-      <div class="player" id="player-box"><div id="yt"></div><div class="cover" id="cover"><div class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div><strong>소리만 듣고 맞혀보세요</strong><span id="cover-sub">답을 고르면 영상이 보여요</span></div></div>
+      <div class="player" id="player-box"><div id="yt"></div><div class="cover" id="cover"><div class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div><strong>소리만 듣고 맞혀보세요</strong><span id="cover-sub">소리가 안 나면 이 화면을 한 번 눌러보세요</span></div></div>
       <div class="row"><button class="primary" id="play" style="flex:1">▶ 듣기</button><button id="stop">정지</button><button id="other">다른 구간</button></div>
       <button id="peek" class="peek">광고가 나오면: 화면 잠깐 보기</button>
       <p class="note" id="listen-note"></p>
@@ -281,7 +281,8 @@ function onState(e){const box=$("player-box");clearInterval(timer);
   else{box.classList.remove("playing");if(e.data===YT.PlayerState.ENDED)$("listen-note").textContent="재생이 끝났어요. 다시 들으려면 '듣기'를 누르세요."}}
 function onErr(){failed=true;const s=queue[idx];$("listen-note").innerHTML="";const a=document.createElement("a");a.href=url(s,s.t[pt]);a.target="_blank";a.rel="noopener";
   a.textContent="이 영상은 여기서 재생이 안 돼요. 유튜브에서 열기";a.style.color="var(--accent)";$("listen-note").appendChild(a)}
-$("play").onclick=()=>{if(!ready){$("listen-note").textContent="플레이어를 불러오는 중이에요. 잠시 후 다시 눌러주세요.";return}player.loadVideoById(clip())};
+$("play").onclick=()=>{if(!ready){$("listen-note").textContent="플레이어를 불러오는 중이에요. 잠시 후 다시 눌러주세요.";return}player.loadVideoById(clip());
+  setTimeout(()=>{const st=player.getPlayerState();if(!failed&&st!==1&&st!==3)$("listen-note").textContent="재생이 시작되지 않았어요. 아이폰·아이패드는 처음 한 번 가려진 화면을 직접 눌러야 소리가 나요."},2500)};
 let answered=false;
 function setPeek(on){$("peek").setAttribute("aria-pressed",on);$("peek").textContent=on?"다시 가리기":"광고가 나오면: 화면 잠깐 보기";if(!answered)$("cover").hidden=on}
 $("peek").onclick=()=>setPeek($("peek").getAttribute("aria-pressed")!=="true");
