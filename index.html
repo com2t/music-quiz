@@ -77,6 +77,22 @@ button:focus-visible,.btn:focus-visible{outline:2px solid var(--accent);outline-
 .stat{display:flex;gap:16px;flex-wrap:wrap;font-size:.9rem;color:var(--muted);font-variant-numeric:tabular-nums}
 .stat b{color:var(--ink)}
 .tag{font-size:.75rem;color:var(--brass);font-weight:600}
+.lock{display:flex;flex-direction:column;gap:12px}
+.lock input{font:inherit;padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);min-height:44px;width:100%}
+.lock input:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.check{display:flex;gap:8px;align-items:center;font-size:.88rem;color:var(--muted)}
+.err{color:var(--bad);font-size:.88rem;margin:0}
+.exlist{display:flex;flex-direction:column;gap:8px}
+.exlist button{justify-content:space-between;text-align:left}
+.exlist button small{color:var(--muted);font-variant-numeric:tabular-nums}
+.qtext{font-size:1.02rem;line-height:1.55;margin:0}
+.callout{border-left:3px solid var(--brass);background:var(--accent-soft);padding:10px 12px;border-radius:0 8px 8px 0;font-size:.9rem;margin:0}
+.answer{font-weight:600;color:var(--accent)}
+.errata{width:100%;border-collapse:collapse;font-size:.88rem}
+.errata th,.errata td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+.errata th{color:var(--muted);font-weight:600;font-size:.78rem;letter-spacing:.04em}
+.tablewrap{overflow-x:auto}
+.nolisten{font-size:.88rem;color:var(--muted);background:var(--accent-soft);padding:10px 12px;border-radius:8px;margin:0}
 ul.plain{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
 ul.plain li{display:flex;gap:12px;align-items:baseline;padding:10px 0;border-bottom:1px solid var(--line)}
 ul.plain li:last-child{border-bottom:0}
@@ -113,6 +129,7 @@ ul.plain a{flex:none;color:var(--accent);font-size:.85rem;font-weight:500}
   <nav class="tabs">
     <button id="tab-quiz" aria-pressed="true">퀴즈</button>
     <button id="tab-list" aria-pressed="false">곡 목록 공부</button>
+    <button id="tab-exam" aria-pressed="false">기출 풀기</button>
   </nav>
 
   <section id="view-setup" class="card">
@@ -176,6 +193,67 @@ ul.plain a{flex:none;color:var(--accent);font-size:.85rem;font-weight:500}
   <section id="view-list" class="card" hidden>
     <p class="note">곡마다 시대·장르와 듣고 구별하는 포인트를 정리했어요. '듣기'는 퀴즈와 같은 지점부터 열려요.</p>
     <div id="list"></div>
+  </section>
+  <section id="view-exam" class="card" hidden>
+    <div id="ex-lock" class="lock">
+      <div class="label">기출 풀기</div>
+      <p class="note" style="margin:0">아는 사람만 볼 수 있도록 잠겨 있어요. 받은 비밀번호를 입력하세요.</p>
+      <form id="ex-form" class="lock">
+        <input id="ex-pw" type="password" autocomplete="current-password" placeholder="비밀번호" aria-label="비밀번호">
+        <label class="check"><input type="checkbox" id="ex-remember" style="width:auto;min-height:0"> 이 기기에서 기억하기</label>
+        <button class="primary" id="ex-unlock" type="submit">열기</button>
+        <p class="err" id="ex-err" hidden></p>
+      </form>
+    </div>
+    <div id="ex-menu" hidden>
+      <div class="label">회차 선택</div>
+      <div class="exlist" id="ex-list" style="margin-top:8px"></div>
+      <div class="label" style="margin-top:18px">섞어서 풀기</div>
+      <div class="exlist" style="margin-top:8px">
+        <button id="ex-rand">객관식 랜덤 20문제 <small>전 회차</small></button>
+        <button id="ex-wrong" hidden>틀린 기출만 다시 <small id="ex-wrong-n"></small></button>
+        <button id="ex-errata">정정 기록 보기 <small>필기·기출에서 바로잡은 것</small></button>
+      </div>
+      <p class="note" style="margin-top:14px">정답은 교수님 답안지 기준이에요. 실제 사실과 다른 부분은 해설 아래 '참고'와 '정정'으로 따로 표시했어요.</p>
+      <button id="ex-lockagain" style="margin-top:8px;font-size:.85rem;min-height:36px">잠그기</button>
+    </div>
+    <div id="ex-q" hidden style="display:flex;flex-direction:column;gap:14px">
+      <div>
+        <div class="progress"><span id="exq-prog"></span><span id="exq-score"></span></div>
+        <div class="bar" style="margin-top:6px"><i id="exq-bar"></i></div>
+      </div>
+      <div class="label" id="exq-tag"></div>
+      <p class="qtext" id="exq-text"></p>
+      <div class="listen" id="exq-listen" hidden>
+        <div class="player" id="ex-player-box"><div id="eyt"></div><div class="cover" id="ex-cover"><div class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div><strong>소리만 듣고 맞혀보세요</strong><span>소리가 안 나면 이 화면을 한 번 눌러보세요</span></div></div>
+        <div class="row"><button class="primary" id="ex-play" style="flex:1">▶ 듣기</button><button id="ex-stop">정지</button><button id="ex-other">다른 구간</button></div>
+        <p class="note" id="ex-lnote"></p>
+      </div>
+      <p class="nolisten" id="exq-nolisten" hidden>이 곡은 감상 목록 49곡에 없어서 재생할 수 없어요. 보기만 보고 풀어보세요.</p>
+      <div class="choices" id="exq-choices"></div>
+      <div id="exq-short" hidden><button class="primary" id="exq-reveal">답 보기</button></div>
+      <div class="feedback" id="exq-fb" hidden>
+        <div class="verdict" id="exq-verdict"></div>
+        <p id="exq-ans" class="answer" hidden></p>
+        <p id="exq-exp"></p>
+        <p class="callout" id="exq-x" hidden></p>
+        <div class="row" id="exq-self" hidden><button id="exq-ok" style="flex:1">맞혔어요</button><button id="exq-no" style="flex:1">틀렸어요</button></div>
+        <button class="primary" id="exq-next" style="margin-top:8px">다음 문제</button>
+      </div>
+      <button id="exq-quit" style="font-size:.85rem;min-height:36px;align-self:flex-start">회차 목록으로</button>
+    </div>
+    <div id="ex-res" hidden style="display:flex;flex-direction:column;gap:14px">
+      <div class="label">결과</div>
+      <div class="score" id="exr-score"></div>
+      <div id="exr-wrapw"><div class="label">틀린 문제</div><ul class="plain" id="exr-list"></ul></div>
+      <div class="row"><button class="primary" id="exr-menu" style="flex:1">회차 목록으로</button><button id="exr-retry">틀린 문제 다시</button></div>
+    </div>
+    <div id="ex-errata-v" hidden style="display:flex;flex-direction:column;gap:12px">
+      <div class="label">정정 기록</div>
+      <p class="note" style="margin:0">필기본과 기출에서 사실과 달랐던 부분이에요. 확실한 오류는 해설에 고친 내용을 넣었어요.</p>
+      <div class="tablewrap"><table class="errata"><thead><tr><th>구분</th><th>위치</th><th>원래 내용</th><th>바로잡은 내용</th></tr></thead><tbody id="errata-body"></tbody></table></div>
+      <button id="errata-back" style="align-self:flex-start">회차 목록으로</button>
+    </div>
   </section>
 </div>
 
@@ -254,7 +332,8 @@ function chips(rowId,opts,cur,cb){const row=$(rowId);row.innerHTML="";
 chips("count-row",[[10,"10문제"],[20,"20문제"],[49,"전체 49"]],count,v=>count=v);
 chips("era-row",[["all","전체"],["MRB","중세~바로크"],["C","고전"]],era,v=>era=v);
 
-function show(v){["setup","q","result","list"].forEach(k=>$("view-"+k).hidden=k!==v)}
+function show(v){["setup","q","result","list","exam"].forEach(k=>$("view-"+k).hidden=k!==v)}
+function setTab(t){["quiz","list","exam"].forEach(k=>$("tab-"+k).setAttribute("aria-pressed",k===t))}
 function refreshWrong(){const w=store.get();$("wrong-count").textContent=w.length;$("retry-wrong").hidden=!w.length}
 
 function makeChoices(s){
@@ -345,8 +424,97 @@ $("again-wrong").onclick=()=>start([...wrongs,...hinted]);
 $("hint-btn").onclick=()=>{const s=queue[idx];if(hintN>=3)return;const li=document.createElement("li");li.innerHTML=`<b>${HL[hintN]}</b><span></span>`;li.querySelector("span").textContent=H[s.no][hintN];$("hint-list").appendChild(li);hintN++;$("hint-btn").textContent=hintN<3?`힌트 하나 더 (${hintN+1}/3)`:"힌트를 모두 봤어요";$("hint-btn").disabled=hintN>=3};
 $("tab-list").addEventListener("click",()=>{if(ready)player.stopVideo()});
 $("again").onclick=()=>{show("setup");refreshWrong()};
-$("tab-quiz").onclick=()=>{$("tab-quiz").setAttribute("aria-pressed",true);$("tab-list").setAttribute("aria-pressed",false);show("setup");refreshWrong()};
-$("tab-list").onclick=()=>{$("tab-list").setAttribute("aria-pressed",true);$("tab-quiz").setAttribute("aria-pressed",false);show("list")};
+$("tab-quiz").onclick=()=>{setTab("quiz");exStop();show("setup");refreshWrong()};
+$("tab-list").onclick=()=>{setTab("list");exStop();show("list")};
+$("tab-exam").onclick=()=>{setTab("exam");if(ready)player.stopVideo();show("exam");exEnter()};
+
+/* ---------- 기출 풀기 (encrypted) ---------- */
+let EX=null,exQueue=[],exI=0,exScore=0,exWrong=[],exPt=0,ePlayer=null,eReady=false,eTimer=null,exAnswered=false;
+const exStore={get(){try{return JSON.parse(localStorage.getItem("mh-exw")||"[]")}catch(e){return[]}},set(v){try{localStorage.setItem("mh-exw",JSON.stringify(v))}catch(e){}}};
+const b64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+async function exDecrypt(pw){
+  const blob=await (await fetch("exams.enc.json",{cache:"no-cache"})).json();
+  const base=await crypto.subtle.importKey("raw",new TextEncoder().encode(pw),"PBKDF2",false,["deriveKey"]);
+  const key=await crypto.subtle.deriveKey({name:"PBKDF2",salt:b64(blob.salt),iterations:blob.iter,hash:"SHA-256"},base,{name:"AES-GCM",length:256},false,["decrypt"]);
+  const pt=await crypto.subtle.decrypt({name:"AES-GCM",iv:b64(blob.iv)},key,b64(blob.ct));
+  return JSON.parse(new TextDecoder().decode(pt));
+}
+function exPane(p){["ex-lock","ex-menu","ex-q","ex-res","ex-errata-v"].forEach(k=>$(k).hidden=k!==p)}
+async function exEnter(){
+  if(EX){exMenu();return}
+  exPane("ex-lock");let saved=null;try{saved=localStorage.getItem("mh-expw")}catch(e){}
+  if(saved){$("ex-pw").value=saved;$("ex-remember").checked=true;exTry(saved,true)}
+}
+async function exTry(pw,silent){
+  $("ex-err").hidden=true;$("ex-unlock").disabled=true;$("ex-unlock").textContent="여는 중…";
+  try{EX=await exDecrypt(pw);
+    try{$("ex-remember").checked?localStorage.setItem("mh-expw",pw):localStorage.removeItem("mh-expw")}catch(e){}
+    exMenu();
+  }catch(e){
+    if(!silent){$("ex-err").textContent=(e&&e.name==="OperationError")?"비밀번호가 맞지 않아요. 띄어쓰기와 하이픈(-)까지 그대로 입력했는지 확인해 주세요.":"자료를 불러오지 못했어요. 인터넷 연결을 확인하고 다시 눌러주세요.";$("ex-err").hidden=false}
+  }finally{$("ex-unlock").disabled=false;$("ex-unlock").textContent="열기"}
+}
+$("ex-form").addEventListener("submit",e=>{e.preventDefault();const pw=$("ex-pw").value.trim();if(pw)exTry(pw,false)});
+$("ex-lockagain").onclick=()=>{EX=null;try{localStorage.removeItem("mh-expw")}catch(e){};$("ex-pw").value="";$("ex-remember").checked=false;exPane("ex-lock")};
+const qid=(e,q)=>e.id+":"+q.n;
+function exAll(){const out=[];EX.exams.forEach(e=>e.qs.forEach(q=>out.push({e,q})));return out}
+function exMenu(){
+  exStop();exPane("ex-menu");const box=$("ex-list");box.innerHTML="";
+  EX.exams.forEach(e=>{const b=document.createElement("button");const nL=e.qs.filter(q=>/^\[(Listening|듣기|감상)/.test(q.q)).length;
+    b.innerHTML=`<span></span><small>${e.qs.length}문항${nL?` · 듣기 ${nL}`:""}</small>`;b.querySelector("span").textContent=e.title;
+    b.onclick=()=>exStart(e.qs.map(q=>({e,q})));box.appendChild(b)});
+  const w=exStore.get();$("ex-wrong").hidden=!w.length;$("ex-wrong-n").textContent=w.length+"문항";
+}
+$("ex-rand").onclick=()=>exStart(shuffle(exAll().filter(x=>x.e.kind==="mc")).slice(0,20));
+$("ex-wrong").onclick=()=>{const w=new Set(exStore.get());exStart(exAll().filter(x=>w.has(qid(x.e,x.q))))};
+$("ex-errata").onclick=()=>{const tb=$("errata-body");tb.innerHTML="";EX.errata.forEach(r=>{const tr=document.createElement("tr");r.forEach(c=>{const td=document.createElement("td");td.textContent=c;tr.appendChild(td)});tb.appendChild(tr)});exPane("ex-errata-v")};
+$("errata-back").onclick=exMenu;$("exq-quit").onclick=exMenu;$("exr-menu").onclick=exMenu;
+$("exr-retry").onclick=()=>exStart(exWrong.slice());
+function exStart(list){if(!list.length)return;exQueue=list;exI=0;exScore=0;exWrong=[];exPane("ex-q");exRender()}
+function exSong(){const q=exQueue[exI].q;return q.s?byNo[q.s[exPt%q.s.length]]:null}
+function exClip(){const s=exSong(),t=s.t[exPt%s.t.length],o={videoId:s.vid,startSeconds:t};if(CLIP)o.endSeconds=t+CLIP;return o}
+function exStop(){clearInterval(eTimer);if(eReady)try{ePlayer.stopVideo()}catch(e){}}
+function exEnsurePlayer(cb){
+  if(eReady){cb();return}
+  if(!window.YT||!YT.Player){$("ex-lnote").textContent="플레이어를 불러오는 중이에요. 잠시 후 다시 눌러주세요.";return}
+  if(!ePlayer){ePlayer=new YT.Player("eyt",{width:"100%",height:"100%",playerVars:{controls:0,disablekb:1,rel:0,playsinline:1,fs:0,iv_load_policy:3,origin:location.origin},
+    events:{onReady:()=>{eReady=true;cb()},onStateChange:exState,onError:()=>{const s=exSong();$("ex-lnote").innerHTML="";const a=document.createElement("a");a.href=url(s,s.t[exPt%s.t.length]);a.target="_blank";a.rel="noopener";a.style.color="var(--accent)";a.textContent="이 영상은 여기서 재생이 안 돼요. 유튜브에서 열기";$("ex-lnote").appendChild(a)}}})}
+}
+function exState(e){const box=$("ex-player-box");clearInterval(eTimer);
+  if(e.data===YT.PlayerState.PLAYING){box.classList.add("playing");eTimer=setInterval(()=>{const c=exClip();const el=Math.max(0,Math.round(ePlayer.getCurrentTime()-c.startSeconds));$("ex-lnote").textContent=`재생 중 ${fmt(CLIP?Math.min(el,CLIP):el)}${CLIP?" / "+fmt(CLIP):""}`},500)}
+  else{box.classList.remove("playing");if(e.data===YT.PlayerState.ENDED)$("ex-lnote").textContent="재생이 끝났어요. 다시 들으려면 '듣기'를 누르세요."}}
+$("ex-play").onclick=()=>exEnsurePlayer(()=>ePlayer.loadVideoById(exClip()));
+$("ex-stop").onclick=()=>{if(eReady)ePlayer.pauseVideo()};
+$("ex-other").onclick=()=>{exPt++;exEnsurePlayer(()=>ePlayer.loadVideoById(exClip()))};
+function exRender(){
+  exStop();exAnswered=false;const {e,q}=exQueue[exI];exPt=Math.floor(Math.random()*12);
+  $("exq-prog").textContent=`${exI+1} / ${exQueue.length}`;$("exq-score").textContent=`맞힌 수 ${exScore}`;
+  $("exq-bar").style.width=`${exI/exQueue.length*100}%`;
+  $("exq-tag").textContent=`${e.title} · ${q.n}번`;$("exq-text").textContent=q.q;
+  const isL=/^\[(Listening|듣기|감상)/.test(q.q);
+  $("exq-listen").hidden=!q.s;$("exq-nolisten").hidden=!(isL&&!q.s);$("ex-cover").hidden=false;$("ex-lnote").textContent="";
+  $("exq-fb").hidden=true;$("exq-x").hidden=true;$("exq-ans").hidden=true;$("exq-self").hidden=true;$("exq-next").hidden=false;
+  const box=$("exq-choices");box.innerHTML="";
+  if(e.kind==="short"){$("exq-short").hidden=false;box.hidden=true}
+  else{$("exq-short").hidden=true;box.hidden=false;
+    q.o.forEach((t,i)=>{const b=document.createElement("button");b.innerHTML=`<b>${"①②③④"[i]}</b><span></span>`;b.querySelector("span").textContent=t;b.onclick=()=>exAnswer(i+1,b);box.appendChild(b)})}
+}
+function exMark(ok){const {e,q}=exQueue[exI];const w=new Set(exStore.get());ok?w.delete(qid(e,q)):w.add(qid(e,q));exStore.set([...w]);if(ok)exScore++;else exWrong.push(exQueue[exI]);$("exq-score").textContent=`맞힌 수 ${exScore}`}
+function exShowFb(){const {q}=exQueue[exI];$("exq-exp").textContent=q.e||"";if(q.x){$("exq-x").textContent=q.x;$("exq-x").hidden=false}$("ex-cover").hidden=true;$("exq-fb").hidden=false;$("exq-next").textContent=exI===exQueue.length-1?"결과 보기":"다음 문제"}
+function exAnswer(pick,btn){
+  if(exAnswered)return;exAnswered=true;const {q}=exQueue[exI];const ok=q.a.includes(pick);
+  [...$("exq-choices").children].forEach((b,i)=>{b.disabled=true;if(q.a.includes(i+1))b.classList.add("correct")});if(!ok)btn.classList.add("wrong");
+  exMark(ok);$("exq-verdict").textContent=ok?"정답이에요!":`아쉬워요. 정답은 ${q.a.map(a=>"①②③④"[a-1]).join(", ")}번이에요.`;$("exq-verdict").className="verdict "+(ok?"ok":"bad");exShowFb();$("exq-next").focus();
+}
+$("exq-reveal").onclick=()=>{const {q}=exQueue[exI];$("exq-short").hidden=true;$("exq-ans").textContent="답: "+q.ans;$("exq-ans").hidden=false;$("exq-verdict").textContent="스스로 채점해 보세요.";$("exq-verdict").className="verdict";$("exq-self").hidden=false;$("exq-next").hidden=true;exShowFb()};
+$("exq-ok").onclick=()=>{exMark(true);$("exq-self").hidden=true;$("exq-next").hidden=false;$("exq-next").focus()};
+$("exq-no").onclick=()=>{exMark(false);$("exq-self").hidden=true;$("exq-next").hidden=false;$("exq-next").focus()};
+$("exq-next").onclick=()=>{exI++;if(exI<exQueue.length)exRender();else exFinish()};
+function exFinish(){
+  exStop();exPane("ex-res");$("exr-score").innerHTML=`${exScore}<small> / ${exQueue.length}</small>`;
+  $("exr-wrapw").hidden=!exWrong.length;$("exr-retry").hidden=!exWrong.length;const ul=$("exr-list");ul.innerHTML="";
+  exWrong.forEach(({e,q})=>{const li=document.createElement("li");li.innerHTML='<span class="n"></span><span class="t"></span>';li.querySelector(".n").textContent=q.n;const t=li.querySelector(".t");t.textContent=e.title;const sm=document.createElement("small");sm.textContent=q.q.slice(0,90);t.appendChild(sm);ul.appendChild(li)});
+}
 buildList();refreshWrong();
 </script>
 <script src="https://www.youtube.com/iframe_api"></script>
