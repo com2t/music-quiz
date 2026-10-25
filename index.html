@@ -431,9 +431,9 @@ function buildNotes(){
 
 /* ---------- 리스닝 공부 (visible player) ---------- */
 let sPlayer=null,sReady=false,sCur=null,sPt=0,sEra="all";
-function sEnsure(cb){if(sReady){cb();return}if(!window.YT||!YT.Player){$("s-now").textContent="플레이어를 불러오는 중이에요. 잠시 후 다시 눌러주세요.";return}
-  if(!sPlayer)sPlayer=new YT.Player("syt",{width:"100%",height:"100%",playerVars:{rel:0,playsinline:1,iv_load_policy:3,origin:location.origin},events:{onReady:()=>{sReady=true;cb()},
-    onError:()=>{const s=byNo[sCur];$("s-now").innerHTML="";const a=document.createElement("a");a.href=url(s);a.target="_blank";a.rel="noopener";a.style.color="var(--accent)";a.textContent="이 영상은 여기서 재생이 안 돼요. 유튜브에서 열기";$("s-now").appendChild(a)}}})}
+let sPending=null;
+function sEnsure(cb){if(sReady)cb();else sPending=cb}
+function sErr(){const s=byNo[sCur];$("s-now").innerHTML="";const a=document.createElement("a");a.href=url(s);a.target="_blank";a.rel="noopener";a.style.color="var(--accent)";a.textContent="이 영상은 여기서 재생이 안 돼요. 유튜브에서 열기";$("s-now").appendChild(a)}
 function sPlay(n,keepPt){
   const s=byNo[n];if(sCur!==n||!keepPt)sPt=0;sCur=n;
   if(sEra!=="all"&&s.era!==sEra){sEra="all";buildSongs()}
@@ -476,7 +476,9 @@ function start(list){queue=shuffle(list);idx=0;score=0;wrongs=[];clean=0;hinted=
 let player=null,ready=false,timer=null,failed=false;
 window.onYouTubeIframeAPIReady=()=>{player=new YT.Player("yt",{width:"100%",height:"100%",
   playerVars:{controls:0,disablekb:1,rel:0,playsinline:1,fs:0,iv_load_policy:3,origin:location.origin},
-  events:{onReady:()=>{ready=true},onStateChange:onState,onError:onErr}})};
+  events:{onReady:()=>{ready=true},onStateChange:onState,onError:onErr}});
+  ePlayer=new YT.Player("eyt",{width:"100%",height:"100%",playerVars:{controls:0,disablekb:1,rel:0,playsinline:1,fs:0,iv_load_policy:3,origin:location.origin},events:{onReady:()=>{eReady=true;if(ePending){const f=ePending;ePending=null;f()}},onStateChange:exState,onError:exErr}});
+  sPlayer=new YT.Player("syt",{width:"100%",height:"100%",playerVars:{rel:0,playsinline:1,iv_load_policy:3,origin:location.origin},events:{onReady:()=>{sReady=true;if(sPending){const f=sPending;sPending=null;f()}},onError:sErr}})};
 function clip(){const s=queue[idx],t=s.t[pt],o={videoId:s.vid,startSeconds:t};if(CLIP)o.endSeconds=t+CLIP;return o}
 function note(){const s=queue[idx];$("listen-note").textContent=`구간 ${pt+1}/${s.t.length} · ${lenLabel()} 재생`}
 function setListen(s){failed=false;note();if(ready)player.cueVideoById(clip())}
@@ -546,12 +548,9 @@ $("exr-retry").onclick=()=>paperStart(paper.origin,exWrong.slice());
 function exSong(){const q=exQueue[exI].q;return q.s?byNo[q.s[exPt%q.s.length]]:null}
 function exClip(){const s=exSong(),t=s.t[exPt%s.t.length],o={videoId:s.vid,startSeconds:t};if(CLIP)o.endSeconds=t+CLIP;return o}
 function exStop(){clearInterval(eTimer);if(eReady)try{ePlayer.stopVideo()}catch(e){}}
-function exEnsurePlayer(cb){
-  if(eReady){cb();return}
-  if(!window.YT||!YT.Player){$("ex-lnote").textContent="플레이어를 불러오는 중이에요. 잠시 후 다시 눌러주세요.";return}
-  if(!ePlayer){ePlayer=new YT.Player("eyt",{width:"100%",height:"100%",playerVars:{controls:0,disablekb:1,rel:0,playsinline:1,fs:0,iv_load_policy:3,origin:location.origin},
-    events:{onReady:()=>{eReady=true;cb()},onStateChange:exState,onError:()=>{const s=exSong();$("ex-lnote").innerHTML="";const a=document.createElement("a");a.href=url(s,s.t[exPt%s.t.length]);a.target="_blank";a.rel="noopener";a.style.color="var(--accent)";a.textContent="이 영상은 여기서 재생이 안 돼요. 유튜브에서 열기";$("ex-lnote").appendChild(a)}}})}
-}
+let ePending=null;
+function exEnsurePlayer(cb){if(eReady)cb();else{ePending=cb;$("ex-lnote").textContent="플레이어를 불러오는 중이에요…"}}
+function exErr(){const s=exSong();if(!s)return;$("ex-lnote").innerHTML="";const a=document.createElement("a");a.href=url(s,s.t[exPt%s.t.length]);a.target="_blank";a.rel="noopener";a.style.color="var(--accent)";a.textContent="이 영상은 여기서 재생이 안 돼요. 유튜브에서 열기";$("ex-lnote").appendChild(a)}
 function exState(e){const box=$("ex-player-box");clearInterval(eTimer);
   if(e.data===YT.PlayerState.PLAYING){box.classList.add("playing");eTimer=setInterval(()=>{const c=exClip();const el=Math.max(0,Math.round(ePlayer.getCurrentTime()-c.startSeconds));$("ex-lnote").textContent=`재생 중 ${fmt(CLIP?Math.min(el,CLIP):el)}${CLIP?" / "+fmt(CLIP):""}`},500)}
   else{box.classList.remove("playing");if(e.data===YT.PlayerState.ENDED)$("ex-lnote").textContent="재생이 끝났어요. 다시 들으려면 '듣기'를 누르세요."}}
