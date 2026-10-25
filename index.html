@@ -12,18 +12,18 @@
 :root{
   --bg:#eef1f4; --surface:#ffffff; --ink:#1b2433; --muted:#5d6878; --line:#cfd6df;
   --accent:#28456b; --accent-soft:#e1e8f2; --brass:#9a7428; --brass-soft:#f4ecdb;
-  --ok:#1f7a4d; --ok-soft:#e2f2e9; --bad:#b03a33; --bad-soft:#f8e4e2;
+  --ok:#1f7a4d; --ok-soft:#e2f2e9; --bad:#b03a33; --bad-soft:#f8e4e2; --hl:#ff3d9a;
   --display:"Gowun Batang","Noto Serif KR",Georgia,serif;
   --body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#121822; --surface:#1a2230; --ink:#e6eaf0; --muted:#9aa5b5; --line:#2f3a4b;
   --accent:#8fb0dc; --accent-soft:#223249; --brass:#d2ad62; --brass-soft:#2e2818;
-  --ok:#6fcf9b; --ok-soft:#173327; --bad:#ef8a83; --bad-soft:#3a1f1e; color-scheme:dark}}
+  --ok:#6fcf9b; --ok-soft:#173327; --bad:#ef8a83; --bad-soft:#3a1f1e; --hl:#ff6fb5; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#121822; --surface:#1a2230; --ink:#e6eaf0; --muted:#9aa5b5; --line:#2f3a4b;
   --accent:#8fb0dc; --accent-soft:#223249; --brass:#d2ad62; --brass-soft:#2e2818;
-  --ok:#6fcf9b; --ok-soft:#173327; --bad:#ef8a83; --bad-soft:#3a1f1e; color-scheme:dark}
+  --ok:#6fcf9b; --ok-soft:#173327; --bad:#ef8a83; --bad-soft:#3a1f1e; --hl:#ff6fb5; color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html{color-scheme:light}
@@ -244,7 +244,8 @@ ol.review .goto{align-self:flex-start;min-height:32px;font-size:.8rem;padding:2p
   </nav>
 
   <!-- 공부: 필기 정리 -->
-  <section id="view-notes" class="card two">
+  <section id="view-notes" class="card two inkable">
+    <button class="inkbtn" data-ink="view-notes" aria-pressed="false">✏️ 필기</button>
     <div class="side">
     <p class="note">강의안과 필기를 시대별로 정리했어요. 필기에 있던 오류는 바로잡은 내용으로 넣었어요.</p>
     <div class="legend"><i></i> 시험에 자주 나온 내용</div>
@@ -418,6 +419,7 @@ ol.review .goto{align-self:flex-start;min-height:32px;font-size:.8rem;padding:2p
 <div class="inkbar" id="inkbar" hidden>
   <button data-tool="pen" aria-pressed="true"><span class="dot" style="background:var(--ink)"></span>펜</button>
   <button data-tool="red" aria-pressed="false"><span class="dot" style="background:var(--bad)"></span>빨강</button>
+  <button data-tool="hl" aria-pressed="false"><span class="dot" style="background:var(--hl);opacity:.55;border-radius:3px;width:18px"></span>형광펜</button>
   <button data-tool="erase" aria-pressed="false">지우개</button>
   <button id="ink-finger" aria-pressed="false">손가락으로도 쓰기</button>
   <button id="ink-clear">전체 지우기</button>
@@ -793,12 +795,14 @@ $("errata-back").onclick=exMenu;
 
 /* ---------- 필기 (펜슬/손가락) ---------- */
 function drawStroke(ctx,st){const p=st.pts;if(!p.length)return;ctx.strokeStyle=st.c;ctx.lineCap="round";ctx.lineJoin="round";
+  if(st.h){ctx.save();ctx.globalAlpha=.32;ctx.lineWidth=16;ctx.lineCap="butt";ctx.beginPath();ctx.moveTo(p[0][0],p[0][1]);for(let i=1;i<p.length;i++)ctx.lineTo(p[i][0],p[i][1]);if(p.length===1)ctx.lineTo(p[0][0]+1,p[0][1]);ctx.stroke();ctx.restore();return}
   if(p.length===1){ctx.fillStyle=st.c;ctx.beginPath();ctx.arc(p[0][0],p[0][1],st.w*(.5+p[0][2])/2,0,7);ctx.fill();return}
   for(let i=1;i<p.length;i++){ctx.lineWidth=st.w*(.5+p[i][2]);ctx.beginPath();ctx.moveTo(p[i-1][0],p[i-1][1]);ctx.lineTo(p[i][0],p[i][1]);ctx.stroke()}}
 function inkSurface(cv,host){
   const o={strokes:[],cur:null};
   o.redraw=()=>{const ctx=cv.getContext("2d"),dpr=window.devicePixelRatio||1;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,cv.width,cv.height);o.strokes.forEach(st=>drawStroke(ctx,st))};
-  o.size=()=>{const dpr=window.devicePixelRatio||1;const w=host?host.scrollWidth:cv.clientWidth,h=host?host.scrollHeight:cv.clientHeight;
+  o.before=null;
+  o.size=()=>{if(o.before)o.before();const dpr=window.devicePixelRatio||1;const w=host?host.scrollWidth:cv.clientWidth,h=host?host.scrollHeight:cv.clientHeight;
     if(host){cv.style.width=w+"px";cv.style.height=h+"px"}cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);o.redraw()};
   o.clear=()=>{o.strokes=[];o.redraw()};
   o.pos=e=>{const r=cv.getBoundingClientRect();return[e.clientX-r.left,e.clientY-r.top,e.pointerType==="pen"&&e.pressure>0?e.pressure:.5]};
@@ -809,36 +813,51 @@ var INK={};
 document.querySelectorAll(".inkable").forEach(card=>{
   const cv=document.createElement("canvas");cv.className="ink-overlay";card.appendChild(cv);
   const surf=inkSurface(cv,card);INK[card.id]={card,cv,surf};
-  new ResizeObserver(()=>{if(card.classList.contains("ink-on"))surf.size()}).observe(card);
+  new ResizeObserver(()=>{if(card.classList.contains("ink-on")||card.id==="view-notes")surf.size()}).observe(card);
   let touch=null;
   cv.addEventListener("pointerdown",e=>{
     if(e.pointerType==="touch"&&!inkFinger){touch={x:e.clientX,y:e.clientY,ly:e.clientY,moved:false};cv.setPointerCapture(e.pointerId);return}
     e.preventDefault();cv.setPointerCapture(e.pointerId);const pt=surf.pos(e);
     if(inkTool==="erase"){surf.erase(pt);surf.cur={erase:true};return}
-    surf.cur={c:getComputedStyle(document.documentElement).getPropertyValue(inkTool==="red"?"--bad":"--ink").trim(),w:3,pts:[pt],x0:e.clientX,y0:e.clientY,t0:Date.now()};surf.strokes.push(surf.cur);surf.redraw()});
+    const css=getComputedStyle(document.documentElement);
+    surf.cur={c:css.getPropertyValue(inkTool==="red"?"--bad":inkTool==="hl"?"--hl":"--ink").trim(),w:3,h:inkTool==="hl",pts:[pt],x0:e.clientX,y0:e.clientY,t0:Date.now()};surf.strokes.push(surf.cur);surf.redraw()});
   cv.addEventListener("pointermove",e=>{
     if(touch){const dy=e.clientY-touch.ly;touch.ly=e.clientY;if(Math.abs(e.clientY-touch.y)+Math.abs(e.clientX-touch.x)>8)touch.moved=true;if(touch.moved)window.scrollBy(0,-dy);return}
     if(!surf.cur)return;const evs=e.getCoalescedEvents?e.getCoalescedEvents():[e];
     if(surf.cur.erase){evs.forEach(ev=>surf.erase(surf.pos(ev)));return}
-    const ctx=cv.getContext("2d");evs.forEach(ev=>{surf.cur.pts.push(surf.pos(ev))});const p=surf.cur.pts;drawStroke(ctx,{c:surf.cur.c,w:surf.cur.w,pts:p.slice(-evs.length-1)})});
+    evs.forEach(ev=>{surf.cur.pts.push(surf.pos(ev))});
+    if(surf.cur.h){surf.redraw();return}
+    const ctx=cv.getContext("2d");const p=surf.cur.pts;drawStroke(ctx,{c:surf.cur.c,w:surf.cur.w,pts:p.slice(-evs.length-1)})});
   const end=e=>{
     if(touch){const t=touch;touch=null;if(!t.moved){cv.style.pointerEvents="none";const el=document.elementFromPoint(e.clientX,e.clientY);cv.style.pointerEvents="";
       const target=el&&el.closest("button,a,summary,label,input,textarea");if(target&&!target.disabled)target.click()}return}
     const c=surf.cur;surf.cur=null;
     if(c&&!c.erase&&Date.now()-c.t0<300&&Math.hypot(e.clientX-c.x0,e.clientY-c.y0)<4){
       cv.style.pointerEvents="none";const el=document.elementFromPoint(e.clientX,e.clientY);cv.style.pointerEvents="";
-      const target=el&&el.closest("button,a,summary,label,input,textarea");if(target&&!target.disabled){surf.strokes.pop();surf.redraw();target.click()}}};
+      const target=el&&el.closest("button,a,summary,label,input,textarea");if(target&&!target.disabled){surf.strokes.pop();surf.redraw();target.click()}}
+    if(card.id==="view-notes")notesSave()};
   cv.addEventListener("pointerup",end);cv.addEventListener("pointercancel",()=>{touch=null;INK[card.id].surf.cur=null});
 });
 function inkSet(id,on){const k=INK[id];if(!k)return;k.card.classList.toggle("ink-on",on);k.card.querySelector(".inkbtn").setAttribute("aria-pressed",on);
   $("inkbar").hidden=!Object.values(INK).some(x=>x.card.classList.contains("ink-on")&&!x.card.hidden);document.body.classList.toggle("ink-pad",!$("inkbar").hidden);if(on)k.surf.size()}
-function inkClear(id){const k=INK[id];if(k){k.surf.clear();if(k.card.classList.contains("ink-on"))k.surf.size()}}
+function inkClear(id){const k=INK[id];if(k){k.surf.clear();if(id==="view-notes")LS.set("mh-notes-ink",[]);if(k.card.classList.contains("ink-on"))k.surf.size()}}
+/* 필기 정리 메모: 섹션 기준으로 저장해서 화면 크기가 바뀌어도 대략 제자리에 남게 */
+function secBoxes(){const card=INK["view-notes"].card,cr=card.getBoundingClientRect();return [...card.querySelectorAll(".sec")].map(sec=>{const r=sec.getBoundingClientRect();return{id:sec.id,x:r.left-cr.left,y:r.top-cr.top,w:r.width}})}
+function notesSave(){const boxes=secBoxes();if(!boxes.length)return;
+  const anch=INK["view-notes"].surf.strokes.map(st=>{const y0=st.pts[0][1];let b=boxes[0];boxes.forEach(x=>{if(x.y<=y0+1)b=x});
+    return{s:b.id,w:b.w,c:st.c,h:!!st.h,lw:st.w,p:st.pts.map(q=>[Math.round((q[0]-b.x)*10)/10,Math.round((q[1]-b.y)*10)/10,q[2]])}});
+  LS.set("mh-notes-ink",anch)}
+function notesLoad(){const anch=LS.get("mh-notes-ink",[]);const map=Object.fromEntries(secBoxes().map(b=>[b.id,b]));
+  INK["view-notes"].surf.strokes=anch.filter(a=>map[a.s]).map(a=>{const b=map[a.s],k=b.w/a.w;return{c:a.c,h:a.h,w:a.lw,pts:a.p.map(q=>[b.x+q[0]*k,b.y+q[1],q[2]])}})}
+let clearArm=null;
 function inkActive(){return Object.values(INK).find(x=>x.card.classList.contains("ink-on")&&!x.card.hidden)}
 document.querySelectorAll(".inkbtn").forEach(b=>b.onclick=()=>inkSet(b.dataset.ink,b.getAttribute("aria-pressed")!=="true"));
 document.querySelectorAll("#inkbar [data-tool]").forEach(b=>b.onclick=()=>{inkTool=b.dataset.tool;document.querySelectorAll("#inkbar [data-tool]").forEach(x=>x.setAttribute("aria-pressed",x===b))});
 $("ink-finger").setAttribute("aria-pressed",inkFinger);
 $("ink-finger").onclick=()=>{inkFinger=!inkFinger;LS.set("mh-inkfinger",inkFinger);$("ink-finger").setAttribute("aria-pressed",inkFinger)};
-$("ink-clear").onclick=()=>{const k=inkActive();if(k)inkClear(k.card.id)};
+$("ink-clear").onclick=()=>{const k=inkActive();if(!k)return;
+  if(k.card.id==="view-notes"&&!clearArm){$("ink-clear").textContent="한 번 더 누르면 전부 지워져요";clearArm=setTimeout(()=>{clearArm=null;$("ink-clear").textContent="전체 지우기"},3000);return}
+  clearTimeout(clearArm);clearArm=null;$("ink-clear").textContent="전체 지우기";inkClear(k.card.id)};
 $("ink-off").onclick=()=>{Object.keys(INK).forEach(id=>inkSet(id,false))};
 /* 주관식 손글씨 답 칸 */
 const padCv=$("pad"),pad=inkSurface(padCv,null);
@@ -851,6 +870,7 @@ $("pad-kb").onclick=()=>{const t=$("pad-text");t.hidden=!t.hidden;$("pad-kb").te
 ["pad-text"].forEach(id=>$(id).addEventListener("input",()=>{exAns[exI].text=$("pad-text").value;refreshGrid()}));
 padCv.addEventListener("pointerup",()=>{exAns[exI].pad=pad.strokes;refreshGrid()});
 $("pad-clear").onclick=()=>{pad.clear();exAns[exI].pad=pad.strokes;refreshGrid()};
+INK["view-notes"].surf.before=notesLoad;
 /* ---------- boot ---------- */
 buildNotes();buildSongs();
 {const v=LS.get("mh-view","notes");const testViews=["ltest","mock","babo"];setMode(testViews.includes(v)?"test":"study",v)}
