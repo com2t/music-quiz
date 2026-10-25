@@ -265,7 +265,7 @@ ul.plain .t small{display:block;color:var(--muted);font-size:.8rem}
       <div class="label">바보</div>
       <p class="note" style="margin:0">아는 사람만 들어올 수 있어요. 받은 비밀번호를 입력하세요.</p>
       <form id="ex-form" class="lock">
-        <div class="pwrow"><input id="ex-pw" type="password" autocomplete="current-password" placeholder="비밀번호" aria-label="비밀번호"><button type="button" id="ex-eye" aria-pressed="false" aria-label="비밀번호 보기">보기</button></div>
+        <div class="pwrow"><input id="ex-pw" type="password" autocomplete="current-password" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="비밀번호" aria-label="비밀번호"><button type="button" id="ex-eye" aria-pressed="false" aria-label="비밀번호 보기">보기</button></div>
         <label class="check"><input type="checkbox" id="ex-remember" style="width:auto;min-height:0"> 이 기기에서 기억하기</label>
         <button class="primary" id="ex-unlock" type="submit">열기</button>
         <p class="err" id="ex-err" hidden></p>
@@ -625,11 +625,17 @@ function exEnter(){if(EX){exMenu();return}exPane("ex-lock");const saved=LS.get("
 async function exTry(pw,silent){
   $("ex-err").hidden=true;$("ex-unlock").disabled=true;$("ex-unlock").textContent="여는 중…";
   try{EX=await exDecrypt(pw);$("ex-remember").checked?LS.set("mh-expw",pw):LS.set("mh-expw",null);exMenu()}
-  catch(e){if(!silent){$("ex-err").textContent=(e&&e.name==="OperationError")?"비밀번호가 맞지 않아요. 띄어쓰기와 하이픈(-)까지 그대로 입력했는지 확인해 주세요.":"자료를 불러오지 못했어요. 인터넷 연결을 확인하고 다시 눌러주세요.";$("ex-err").hidden=false}}
+  catch(e){if(!silent){$("ex-err").textContent=(e&&e.name==="OperationError")?"비밀번호가 맞지 않아요. 다시 확인해 주세요.":"자료를 불러오지 못했어요. 인터넷 연결을 확인하고 다시 눌러주세요.";$("ex-err").hidden=false}}
   finally{$("ex-unlock").disabled=false;$("ex-unlock").textContent="열기"}
 }
 $("ex-eye").onclick=()=>{const i=$("ex-pw"),on=i.type==="password";i.type=on?"text":"password";$("ex-eye").setAttribute("aria-pressed",on);$("ex-eye").textContent=on?"숨기기":"보기";$("ex-eye").setAttribute("aria-label",on?"비밀번호 숨기기":"비밀번호 보기");i.focus()};
-$("ex-form").addEventListener("submit",e=>{e.preventDefault();const pw=$("ex-pw").value.trim();if(pw)exTry(pw,false)});
+/* 한글로 입력해도 두벌식 자판의 영문 키로 바꿔서 확인 */
+const KO_CHO="rRseEfaqQtTdwWczxvg",KO_JUNG=["k","o","i","O","j","p","u","P","h","hk","ho","hl","y","n","nj","np","nl","b","m","ml","l"],KO_JONG=["","r","R","rt","s","sw","sg","e","f","fr","fa","fq","ft","fx","fv","fg","a","q","qt","t","T","d","w","c","z","x","v","g"];
+const KO_JAMO={"ㄱ":"r","ㄲ":"R","ㄳ":"rt","ㄴ":"s","ㄵ":"sw","ㄶ":"sg","ㄷ":"e","ㄸ":"E","ㄹ":"f","ㄺ":"fr","ㄻ":"fa","ㄼ":"fq","ㄽ":"ft","ㄾ":"fx","ㄿ":"fv","ㅀ":"fg","ㅁ":"a","ㅂ":"q","ㅃ":"Q","ㅄ":"qt","ㅅ":"t","ㅆ":"T","ㅇ":"d","ㅈ":"w","ㅉ":"W","ㅊ":"c","ㅋ":"z","ㅌ":"x","ㅍ":"v","ㅎ":"g","ㅏ":"k","ㅐ":"o","ㅑ":"i","ㅒ":"O","ㅓ":"j","ㅔ":"p","ㅕ":"u","ㅖ":"P","ㅗ":"h","ㅘ":"hk","ㅙ":"ho","ㅚ":"hl","ㅛ":"y","ㅜ":"n","ㅝ":"nj","ㅞ":"np","ㅟ":"nl","ㅠ":"b","ㅡ":"m","ㅢ":"ml","ㅣ":"l"};
+function toKeys(str){let o="";for(const ch of str){const c=ch.charCodeAt(0);
+  if(c>=0xAC00&&c<=0xD7A3){const i=c-0xAC00;o+=KO_CHO[Math.floor(i/588)]+KO_JUNG[Math.floor(i%588/28)]+KO_JONG[i%28]}
+  else o+=KO_JAMO[ch]||ch}return o.toLowerCase()}
+$("ex-form").addEventListener("submit",e=>{e.preventDefault();const pw=toKeys($("ex-pw").value.replace(/\s+/g,""));if(pw)exTry(pw,false)});
 $("ex-lockagain").onclick=()=>{EX=null;LS.set("mh-expw",null);$("ex-pw").value="";$("ex-remember").checked=false;exPane("ex-lock")};
 function exAll(){const out=[];EX.exams.forEach(e=>e.qs.forEach(q=>out.push({e,q})));return out}
 function exMenu(){
