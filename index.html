@@ -115,7 +115,11 @@ ul.plain a{flex:none;color:var(--accent);font-size:.85rem;font-weight:500}
       <div class="label">범위</div>
       <div class="row" id="era-row" style="margin-top:8px"></div>
     </div>
-    <p class="note">'듣기'를 누르면 곡의 여러 구간 중 하나가 랜덤으로 30초 재생돼요. 화면은 가려져 있고, 답을 고르면 영상이 보여요.</p>
+    <div>
+      <div class="label">한 번에 듣는 길이</div>
+      <div class="row" id="clip-row" style="margin-top:8px"></div>
+    </div>
+    <p class="note">'듣기'를 누르면 곡의 여러 구간 중 하나가 랜덤으로 재생돼요. 화면은 가려져 있고, 답을 고르면 영상이 보여요.</p>
     <div class="row">
       <button class="primary" id="start" style="flex:1">시작하기</button>
       <button id="retry-wrong" hidden>틀린 문제만 (<span id="wrong-count">0</span>)</button>
@@ -261,16 +265,19 @@ function render(){
     b.innerHTML=`<b>${"①②③④"[i]}</b><span></span>`;b.querySelector("span").textContent=c.title;
     b.onclick=()=>answer(s,c,b);b.dataset.no=c.no;box.appendChild(b)});
 }
-const CLIP=30;let player=null,ready=false,timer=null,failed=false;
+let CLIP=60;try{const c=+localStorage.getItem("mh-clip");if(c>=0&&localStorage.getItem("mh-clip")!==null)CLIP=c}catch(e){}
+let player=null,ready=false,timer=null,failed=false;
 window.onYouTubeIframeAPIReady=()=>{player=new YT.Player("yt",{width:"100%",height:"100%",
   playerVars:{controls:0,disablekb:1,rel:0,playsinline:1,fs:0,iv_load_policy:3,origin:location.origin},
   events:{onReady:()=>{ready=true},onStateChange:onState,onError:onErr}})};
-function clip(){const s=queue[idx],t=s.t[pt];return{videoId:s.vid,startSeconds:t,endSeconds:t+CLIP}}
-function note(){const s=queue[idx];$("listen-note").textContent=`구간 ${pt+1}/${s.t.length} · ${CLIP}초 재생`}
+function clip(){const s=queue[idx],t=s.t[pt],o={videoId:s.vid,startSeconds:t};if(CLIP)o.endSeconds=t+CLIP;return o}
+const lenLabel=()=>CLIP?(CLIP<60?CLIP+"초":CLIP/60+"분"):"끝까지";
+chips("clip-row",[[30,"30초"],[60,"1분"],[120,"2분"],[0,"끝까지"]],CLIP,v=>{CLIP=v;try{localStorage.setItem("mh-clip",v)}catch(e){}});
+function note(){const s=queue[idx];$("listen-note").textContent=`구간 ${pt+1}/${s.t.length} · ${lenLabel()} 재생`}
 function setListen(s){failed=false;note();if(ready)player.cueVideoById(clip())}
 function onState(e){const box=$("player-box");clearInterval(timer);
   if(e.data===YT.PlayerState.PLAYING){box.classList.add("playing");timer=setInterval(()=>{if(failed)return;const c=clip();
-    const el=Math.max(0,Math.round(player.getCurrentTime()-c.startSeconds));$("listen-note").textContent=`재생 중 ${fmt(Math.min(el,CLIP))} / ${fmt(CLIP)} · 구간 ${pt+1}/${queue[idx].t.length}`},500)}
+    const el=Math.max(0,Math.round(player.getCurrentTime()-c.startSeconds));$("listen-note").textContent=`재생 중 ${fmt(CLIP?Math.min(el,CLIP):el)}${CLIP?" / "+fmt(CLIP):""} · 구간 ${pt+1}/${queue[idx].t.length}`},500)}
   else{box.classList.remove("playing");if(e.data===YT.PlayerState.ENDED)$("listen-note").textContent="재생이 끝났어요. 다시 들으려면 '듣기'를 누르세요."}}
 function onErr(){failed=true;const s=queue[idx];$("listen-note").innerHTML="";const a=document.createElement("a");a.href=url(s,s.t[pt]);a.target="_blank";a.rel="noopener";
   a.textContent="이 영상은 여기서 재생이 안 돼요. 유튜브에서 열기";a.style.color="var(--accent)";$("listen-note").appendChild(a)}
