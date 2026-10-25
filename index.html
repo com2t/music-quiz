@@ -4,25 +4,25 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="referrer" content="strict-origin-when-cross-origin">
-<title>서양음악사 리스닝 퀴즈</title>
+<title>서양음악사 공부방</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap">
 <style>
-/* Layout: one narrow column like a concert program; a staff-line rule under the header; one question card at a time */
+/* Layout: one narrow column like a concert program; two top modes (공부/테스트) with sub-chips; one card per view */
 :root{
   --bg:#eef1f4; --surface:#ffffff; --ink:#1b2433; --muted:#5d6878; --line:#cfd6df;
-  --accent:#28456b; --accent-soft:#e1e8f2; --brass:#9a7428;
+  --accent:#28456b; --accent-soft:#e1e8f2; --brass:#9a7428; --brass-soft:#f4ecdb;
   --ok:#1f7a4d; --ok-soft:#e2f2e9; --bad:#b03a33; --bad-soft:#f8e4e2;
   --display:"Gowun Batang","Noto Serif KR",Georgia,serif;
   --body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#121822; --surface:#1a2230; --ink:#e6eaf0; --muted:#9aa5b5; --line:#2f3a4b;
-  --accent:#8fb0dc; --accent-soft:#223249; --brass:#d2ad62;
+  --accent:#8fb0dc; --accent-soft:#223249; --brass:#d2ad62; --brass-soft:#2e2818;
   --ok:#6fcf9b; --ok-soft:#173327; --bad:#ef8a83; --bad-soft:#3a1f1e; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#121822; --surface:#1a2230; --ink:#e6eaf0; --muted:#9aa5b5; --line:#2f3a4b;
-  --accent:#8fb0dc; --accent-soft:#223249; --brass:#d2ad62;
+  --accent:#8fb0dc; --accent-soft:#223249; --brass:#d2ad62; --brass-soft:#2e2818;
   --ok:#6fcf9b; --ok-soft:#173327; --bad:#ef8a83; --bad-soft:#3a1f1e; color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -30,17 +30,21 @@ html{color-scheme:light}
 img{max-width:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 48px}
-.wrap{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+.wrap{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
 header h1{font-family:var(--display);font-weight:700;font-size:1.75rem;line-height:1.25;margin:0;text-wrap:balance}
 header p{margin:4px 0 0;color:var(--muted);font-size:.9rem}
 .staff{height:17px;background:repeating-linear-gradient(to bottom,var(--line) 0 1px,transparent 1px 4px);margin-top:14px}
-.tabs{display:flex;gap:6px}
-.tabs button{flex:1}
 button,.btn{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink);
   padding:10px 14px;border-radius:8px;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px}
-button:focus-visible,.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button:focus-visible,.btn:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .primary{background:var(--accent);border-color:var(--accent);color:var(--surface);font-weight:600}
-.tabs button[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:600}
+.mode{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}
+.mode button{border:0;border-radius:0;min-height:52px;font-family:var(--display);font-size:1.15rem;font-weight:700;color:var(--muted);background:transparent}
+.mode button+button{border-left:1px solid var(--line)}
+.mode button[aria-pressed="true"]{background:var(--accent);color:var(--surface)}
+.sub{display:flex;gap:6px;flex-wrap:wrap}
+.sub button{border-radius:999px;min-height:38px;padding:6px 16px;font-size:.92rem}
+.sub button[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:600}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:16px}
 .label{font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
 .row{display:flex;gap:8px;flex-wrap:wrap}
@@ -51,7 +55,6 @@ button:focus-visible,.btn:focus-visible{outline:2px solid var(--accent);outline-
 .bar i{display:block;height:100%;background:var(--brass);transition:width .3s}
 .qno{font-family:var(--display);font-size:2.4rem;line-height:1;color:var(--brass)}
 .listen{display:flex;flex-direction:column;gap:8px}
-.listen .btn.primary{font-size:1.05rem;padding:14px}
 .note{font-size:.82rem;color:var(--muted);margin:0}
 .choices{display:flex;flex-direction:column;gap:8px}
 .choices button{justify-content:flex-start;text-align:left;padding:12px 14px;gap:12px;line-height:1.4}
@@ -86,9 +89,9 @@ button:focus-visible,.btn:focus-visible{outline:2px solid var(--accent);outline-
 .exlist button{justify-content:space-between;text-align:left}
 .exlist button small{color:var(--muted);font-variant-numeric:tabular-nums}
 .qtext{font-size:1.02rem;line-height:1.55;margin:0}
-.callout{border-left:3px solid var(--brass);background:var(--accent-soft);padding:10px 12px;border-radius:0 8px 8px 0;font-size:.9rem;margin:0}
+.callout{border-left:3px solid var(--brass);background:var(--brass-soft);padding:10px 12px;border-radius:0 8px 8px 0;font-size:.9rem;margin:0}
 .answer{font-weight:600;color:var(--accent)}
-.errata{width:100%;border-collapse:collapse;font-size:.88rem}
+.errata{width:100%;border-collapse:collapse;font-size:.88rem;min-width:520px}
 .errata th,.errata td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
 .errata th{color:var(--muted);font-weight:600;font-size:.78rem;letter-spacing:.04em}
 .tablewrap{overflow-x:auto}
@@ -99,10 +102,9 @@ ul.plain li:last-child{border-bottom:0}
 ul.plain .n{flex:none;width:28px;color:var(--muted);font-variant-numeric:tabular-nums;font-size:.85rem}
 ul.plain .t{flex:1;min-width:0}
 ul.plain .t small{display:block;color:var(--muted);font-size:.8rem}
-ul.plain a{flex:none;color:var(--accent);font-size:.85rem;font-weight:500}
-.era{font-family:var(--display);font-size:1.1rem;margin:8px 0 0;color:var(--brass)}
+.era{font-family:var(--display);font-size:1.15rem;margin:6px 0 0;color:var(--brass);font-weight:700}
 .player{position:relative;width:100%;aspect-ratio:16/9;max-width:100%;border-radius:10px;overflow:hidden;background:var(--ink)}
-.player #yt,.player iframe{position:absolute;inset:0;width:100%;height:100%}
+.player>div,.player iframe{position:absolute;inset:0;width:100%;height:100%}
 .cover{position:absolute;inset:0;pointer-events:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--accent);color:var(--surface);text-align:center;padding:16px}
 .cover strong{font-family:var(--display);font-size:1.4rem}
 .cover span{font-size:.85rem;opacity:.85}
@@ -113,38 +115,87 @@ ul.plain a{flex:none;color:var(--accent);font-size:.85rem;font-weight:500}
 .playing .eq i{animation:eq 0.9s ease-in-out infinite}
 .eq i:nth-child(2){animation-delay:.2s}.eq i:nth-child(3){animation-delay:.4s}.eq i:nth-child(4){animation-delay:.1s}.eq i:nth-child(5){animation-delay:.3s}
 @keyframes eq{0%,100%{height:6px}50%{height:28px}}
-@media (prefers-reduced-motion:reduce){.playing .eq i{animation:none;height:18px}}
-@media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+/* notes */
+.toc{display:flex;gap:6px;flex-wrap:wrap}
+.toc a{font-size:.85rem;color:var(--accent);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:4px 12px}
+.sec{display:flex;flex-direction:column;gap:8px;scroll-margin-top:12px}
+.sec h2{font-family:var(--display);font-size:1.25rem;margin:0;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.sec h2 small{font-family:var(--body);font-size:.8rem;color:var(--muted);font-weight:500;font-variant-numeric:tabular-nums}
+.sec ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}
+.sec li{padding:8px 10px 8px 12px;border-radius:8px;border-left:3px solid transparent;font-size:.93rem;line-height:1.6}
+.sec li.star{border-left-color:var(--brass);background:var(--brass-soft)}
+.sec li .badge{font-size:.7rem;font-weight:700;color:var(--brass);letter-spacing:.04em;margin-right:6px}
+.songlink{font:inherit;font-size:.8rem;min-height:28px;padding:2px 10px;margin:4px 6px 0 0;border-radius:999px;color:var(--accent)}
+.legend{font-size:.82rem;color:var(--muted);display:flex;gap:8px;align-items:center}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;background:var(--brass-soft);border-left:3px solid var(--brass)}
+/* listening study */
+.sticky{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);padding-block:4px 10px;display:flex;flex-direction:column;gap:8px;border-bottom:1px solid var(--line)}
+.nowplaying{font-size:.88rem;font-weight:600;min-height:1.4em}
+.songs{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.songs li{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line)}
+.songs li:last-child{border-bottom:0}
+.songs li.on{background:var(--accent-soft);margin-inline:-10px;padding-inline:10px;border-radius:8px}
+.songs .play{flex:none;width:44px;min-height:44px;padding:0;border-radius:50%;color:var(--accent)}
+.songs .t{flex:1;min-width:0;font-size:.93rem}
+.songs .t small{display:block;color:var(--muted);font-size:.82rem;margin-top:2px}
+.songs details{margin-top:6px;font-size:.84rem}
+.songs summary{cursor:pointer;color:var(--brass);font-weight:600}
+.songs dl{margin:6px 0 0;display:grid;grid-template-columns:auto 1fr;gap:4px 10px}
+.songs dt{color:var(--brass);font-weight:600;font-size:.78rem}
+.songs dd{margin:0}
+.trend{border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.trend summary{cursor:pointer;font-weight:600}
+.trend ul{margin:10px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:.9rem}
+@media (prefers-reduced-motion:reduce){.playing .eq i{animation:none;height:18px}.bar i{transition:none}}
 </style>
 </head>
 <body>
 
 <div class="wrap">
   <header>
-    <h1>서양음악사 리스닝 퀴즈</h1>
-    <p>수업 감상곡 49곡 · 듣고 4지선다로 고르기</p>
+    <h1>서양음악사 공부방</h1>
+    <p>필기 정리 · 감상곡 49곡 · 리스닝 테스트 · 모의고사</p>
     <div class="staff" aria-hidden="true"></div>
   </header>
 
-  <nav class="tabs">
-    <button id="tab-quiz" aria-pressed="true">퀴즈</button>
-    <button id="tab-list" aria-pressed="false">곡 목록 공부</button>
-    <button id="tab-exam" aria-pressed="false">기출 풀기</button>
+  <nav class="mode" aria-label="모드">
+    <button id="mode-study" aria-pressed="true">공부</button>
+    <button id="mode-test" aria-pressed="false">테스트</button>
+  </nav>
+  <nav class="sub" id="sub-study" aria-label="공부 메뉴">
+    <button data-view="notes" aria-pressed="true">필기 정리</button>
+    <button data-view="lstudy" aria-pressed="false">리스닝 공부</button>
+  </nav>
+  <nav class="sub" id="sub-test" aria-label="테스트 메뉴" hidden>
+    <button data-view="ltest" aria-pressed="false">리스닝 테스트</button>
+    <button data-view="mock" aria-pressed="false">모의고사</button>
+    <button data-view="babo" aria-pressed="false">바보</button>
   </nav>
 
-  <section id="view-setup" class="card">
-    <div>
-      <div class="label">문제 수</div>
-      <div class="row" id="count-row" style="margin-top:8px"></div>
+  <!-- 공부: 필기 정리 -->
+  <section id="view-notes" class="card">
+    <p class="note">강의안과 필기를 시대별로 정리했어요. 필기에 있던 오류는 바로잡은 내용으로 넣었어요.</p>
+    <div class="legend"><i></i> 시험에 자주 나온 내용</div>
+    <nav class="toc" id="toc" aria-label="목차"></nav>
+    <div id="notes" style="display:flex;flex-direction:column;gap:22px"></div>
+  </section>
+
+  <!-- 공부: 리스닝 공부 -->
+  <section id="view-lstudy" class="card" hidden>
+    <div class="sticky">
+      <div class="player" id="s-player-box"><div id="syt"></div></div>
+      <div class="nowplaying" id="s-now">곡 옆의 ▶를 누르면 여기서 재생돼요.</div>
+      <div class="row"><button id="s-other" disabled>다른 구간</button><button id="s-stop" disabled>정지</button></div>
     </div>
-    <div>
-      <div class="label">범위</div>
-      <div class="row" id="era-row" style="margin-top:8px"></div>
-    </div>
-    <div>
-      <div class="label">한 번에 듣는 길이</div>
-      <div class="row" id="clip-row" style="margin-top:8px"></div>
-    </div>
+    <div class="row" id="s-era"></div>
+    <ul class="songs" id="songs"></ul>
+  </section>
+
+  <!-- 테스트: 리스닝 테스트 -->
+  <section id="view-setup" class="card" hidden>
+    <div><div class="label">문제 수</div><div class="row" id="count-row" style="margin-top:8px"></div></div>
+    <div><div class="label">범위</div><div class="row" id="era-row" style="margin-top:8px"></div></div>
+    <div><div class="label">한 번에 듣는 길이</div><div class="row" id="clip-row" style="margin-top:8px"></div></div>
     <p class="note">'듣기'를 누르면 곡의 여러 구간 중 하나가 랜덤으로 재생돼요. 화면은 가려져 있고, 답을 고르면 영상이 보여요.</p>
     <div class="row">
       <button class="primary" id="start" style="flex:1">시작하기</button>
@@ -159,7 +210,7 @@ ul.plain a{flex:none;color:var(--accent);font-size:.85rem;font-weight:500}
     </div>
     <div class="qno" id="qno"></div>
     <div class="listen">
-      <div class="player" id="player-box"><div id="yt"></div><div class="cover" id="cover"><div class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div><strong>소리만 듣고 맞혀보세요</strong><span id="cover-sub">소리가 안 나면 이 화면을 한 번 눌러보세요</span></div></div>
+      <div class="player" id="player-box"><div id="yt"></div><div class="cover" id="cover"><div class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div><strong>소리만 듣고 맞혀보세요</strong><span>소리가 안 나면 이 화면을 한 번 눌러보세요</span></div></div>
       <div class="row"><button class="primary" id="play" style="flex:1">▶ 듣기</button><button id="stop">정지</button><button id="other">다른 구간</button></div>
       <button id="peek" class="peek">광고가 나오면: 화면 잠깐 보기</button>
       <p class="note" id="listen-note"></p>
@@ -190,14 +241,25 @@ ul.plain a{flex:none;color:var(--accent);font-size:.85rem;font-weight:500}
     </div>
   </section>
 
-  <section id="view-list" class="card" hidden>
-    <p class="note">곡마다 시대·장르와 듣고 구별하는 포인트를 정리했어요. '듣기'는 퀴즈와 같은 지점부터 열려요.</p>
-    <div id="list"></div>
+  <!-- 테스트: 모의고사 -->
+  <section id="view-mock" class="card" hidden>
+    <details class="trend" id="trend"><summary>출제 경향 정리</summary><ul id="trend-list"></ul></details>
+    <div>
+      <div class="label">모의고사 선택</div>
+      <p class="note" style="margin-top:4px">강의 자료를 바탕으로 새로 만든 문제예요. 최근 시험처럼 듣기 15문항 + 객관식 25문항이에요.</p>
+    </div>
+    <div class="exlist" id="mock-list"></div>
+    <div class="exlist">
+      <button id="mock-written">객관식만 풀기 <small>모의고사 50문항 중 랜덤 20</small></button>
+      <button id="mock-wrong" hidden>틀린 문제만 다시 <small id="mock-wrong-n"></small></button>
+    </div>
   </section>
-  <section id="view-exam" class="card" hidden>
+
+  <!-- 테스트: 바보 (잠금) -->
+  <section id="view-babo" class="card" hidden>
     <div id="ex-lock" class="lock">
-      <div class="label">기출 풀기</div>
-      <p class="note" style="margin:0">아는 사람만 볼 수 있도록 잠겨 있어요. 받은 비밀번호를 입력하세요.</p>
+      <div class="label">바보</div>
+      <p class="note" style="margin:0">아는 사람만 들어올 수 있어요. 받은 비밀번호를 입력하세요.</p>
       <form id="ex-form" class="lock">
         <input id="ex-pw" type="password" autocomplete="current-password" placeholder="비밀번호" aria-label="비밀번호">
         <label class="check"><input type="checkbox" id="ex-remember" style="width:auto;min-height:0"> 이 기기에서 기억하기</label>
@@ -205,61 +267,63 @@ ul.plain a{flex:none;color:var(--accent);font-size:.85rem;font-weight:500}
         <p class="err" id="ex-err" hidden></p>
       </form>
     </div>
-    <div id="ex-menu" hidden>
-      <div class="label">회차 선택</div>
-      <div class="exlist" id="ex-list" style="margin-top:8px"></div>
-      <div class="label" style="margin-top:18px">섞어서 풀기</div>
-      <div class="exlist" style="margin-top:8px">
-        <button id="ex-rand">객관식 랜덤 20문제 <small>전 회차</small></button>
-        <button id="ex-wrong" hidden>틀린 기출만 다시 <small id="ex-wrong-n"></small></button>
-        <button id="ex-errata">정정 기록 보기 <small>필기·기출에서 바로잡은 것</small></button>
+    <div id="ex-menu" hidden style="display:flex;flex-direction:column;gap:10px">
+      <div class="label">년도별로 풀기</div>
+      <div class="exlist" id="ex-list"></div>
+      <div class="label" style="margin-top:8px">섞어서 풀기</div>
+      <div class="exlist">
+        <button id="ex-rand">객관식 랜덤 20문제 <small>전체</small></button>
+        <button id="ex-wrong" hidden>틀린 문제만 다시 <small id="ex-wrong-n"></small></button>
+        <button id="ex-errata">정정 기록 보기 <small>필기·자료에서 바로잡은 것</small></button>
       </div>
-      <p class="note" style="margin-top:14px">정답은 교수님 답안지 기준이에요. 실제 사실과 다른 부분은 해설 아래 '참고'와 '정정'으로 따로 표시했어요.</p>
-      <button id="ex-lockagain" style="margin-top:8px;font-size:.85rem;min-height:36px">잠그기</button>
-    </div>
-    <div id="ex-q" hidden style="display:flex;flex-direction:column;gap:14px">
-      <div>
-        <div class="progress"><span id="exq-prog"></span><span id="exq-score"></span></div>
-        <div class="bar" style="margin-top:6px"><i id="exq-bar"></i></div>
-      </div>
-      <div class="label" id="exq-tag"></div>
-      <p class="qtext" id="exq-text"></p>
-      <div class="listen" id="exq-listen" hidden>
-        <div class="player" id="ex-player-box"><div id="eyt"></div><div class="cover" id="ex-cover"><div class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div><strong>소리만 듣고 맞혀보세요</strong><span>소리가 안 나면 이 화면을 한 번 눌러보세요</span></div></div>
-        <div class="row"><button class="primary" id="ex-play" style="flex:1">▶ 듣기</button><button id="ex-stop">정지</button><button id="ex-other">다른 구간</button></div>
-        <p class="note" id="ex-lnote"></p>
-      </div>
-      <p class="nolisten" id="exq-nolisten" hidden>이 곡은 감상 목록 49곡에 없어서 재생할 수 없어요. 보기만 보고 풀어보세요.</p>
-      <div class="choices" id="exq-choices"></div>
-      <div id="exq-short" hidden><button class="primary" id="exq-reveal">답 보기</button></div>
-      <div class="feedback" id="exq-fb" hidden>
-        <div class="verdict" id="exq-verdict"></div>
-        <p id="exq-ans" class="answer" hidden></p>
-        <p id="exq-exp"></p>
-        <p class="callout" id="exq-x" hidden></p>
-        <div class="row" id="exq-self" hidden><button id="exq-ok" style="flex:1">맞혔어요</button><button id="exq-no" style="flex:1">틀렸어요</button></div>
-        <button class="primary" id="exq-next" style="margin-top:8px">다음 문제</button>
-      </div>
-      <button id="exq-quit" style="font-size:.85rem;min-height:36px;align-self:flex-start">회차 목록으로</button>
-    </div>
-    <div id="ex-res" hidden style="display:flex;flex-direction:column;gap:14px">
-      <div class="label">결과</div>
-      <div class="score" id="exr-score"></div>
-      <div id="exr-wrapw"><div class="label">틀린 문제</div><ul class="plain" id="exr-list"></ul></div>
-      <div class="row"><button class="primary" id="exr-menu" style="flex:1">회차 목록으로</button><button id="exr-retry">틀린 문제 다시</button></div>
+      <p class="note">정답은 교수님 답안 기준이에요. 실제 사실과 다른 부분은 해설 아래 '참고'와 '정정'으로 표시했어요.</p>
+      <button id="ex-lockagain" style="align-self:flex-start;font-size:.85rem;min-height:36px">잠그기</button>
     </div>
     <div id="ex-errata-v" hidden style="display:flex;flex-direction:column;gap:12px">
       <div class="label">정정 기록</div>
-      <p class="note" style="margin:0">필기본과 기출에서 사실과 달랐던 부분이에요. 확실한 오류는 해설에 고친 내용을 넣었어요.</p>
       <div class="tablewrap"><table class="errata"><thead><tr><th>구분</th><th>위치</th><th>원래 내용</th><th>바로잡은 내용</th></tr></thead><tbody id="errata-body"></tbody></table></div>
-      <button id="errata-back" style="align-self:flex-start">회차 목록으로</button>
+      <button id="errata-back" style="align-self:flex-start">목록으로</button>
     </div>
+  </section>
+
+  <!-- 공용 시험지 (모의고사·바보) -->
+  <section id="view-paper" class="card" hidden>
+    <div>
+      <div class="progress"><span id="exq-prog"></span><span id="exq-score"></span></div>
+      <div class="bar" style="margin-top:6px"><i id="exq-bar"></i></div>
+    </div>
+    <div class="label" id="exq-tag"></div>
+    <p class="qtext" id="exq-text"></p>
+    <div class="listen" id="exq-listen" hidden>
+      <div class="player" id="ex-player-box"><div id="eyt"></div><div class="cover" id="ex-cover"><div class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div><strong>소리만 듣고 맞혀보세요</strong><span>소리가 안 나면 이 화면을 한 번 눌러보세요</span></div></div>
+      <div class="row"><button class="primary" id="ex-play" style="flex:1">▶ 듣기</button><button id="ex-stop">정지</button><button id="ex-other">다른 구간</button></div>
+      <button id="ex-peek" class="peek">광고가 나오면: 화면 잠깐 보기</button>
+      <p class="note" id="ex-lnote"></p>
+    </div>
+    <p class="nolisten" id="exq-nolisten" hidden>이 곡은 감상 목록 49곡에 없어서 재생할 수 없어요. 보기만 보고 풀어보세요.</p>
+    <div class="choices" id="exq-choices"></div>
+    <div id="exq-short" hidden><button class="primary" id="exq-reveal">답 보기</button></div>
+    <div class="feedback" id="exq-fb" hidden>
+      <div class="verdict" id="exq-verdict"></div>
+      <p id="exq-ans" class="answer" hidden></p>
+      <p id="exq-exp"></p>
+      <p class="callout" id="exq-x" hidden></p>
+      <div class="row" id="exq-self" hidden><button id="exq-ok" style="flex:1">맞혔어요</button><button id="exq-no" style="flex:1">틀렸어요</button></div>
+      <button class="primary" id="exq-next" style="margin-top:8px">다음 문제</button>
+    </div>
+    <button id="exq-quit" style="font-size:.85rem;min-height:36px;align-self:flex-start">목록으로</button>
+  </section>
+
+  <section id="view-pres" class="card" hidden>
+    <div class="label">결과</div>
+    <div class="score" id="exr-score"></div>
+    <div id="exr-wrapw"><div class="label">틀린 문제</div><ul class="plain" id="exr-list"></ul></div>
+    <div class="row"><button class="primary" id="exr-menu" style="flex:1">목록으로</button><button id="exr-retry">틀린 문제 다시</button></div>
   </section>
 </div>
 
 <script>
 const E={M:"중세",R:"르네상스",B:"바로크",C:"고전"};
-// [no, id(video), start sec, title, era, genre, clue, confusers]
 const D=[
 [1,"Vj7R9LeiJPE",[0, 90, 180],"그레고리오 성가 ‘진노의 날’ (Gregorian chant - ‘Dies Irae’)","M","단선율 성가","반주 없이 남성들이 한 선율을 함께 부름(단성음악). 박이 일정하지 않고 라틴어 가사를 따라 흘러감.",[2,3,34]],
 [2,"FNbIyFlvxlk",[0, 100, 180],"조스캥 데 프레 ‘아베 마리아’ (Josquin des Prez - ‘Ave Maria’)","R","모테트","무반주 합창인데 성부들이 같은 선율을 차례로 따라 들어옴(모방 대위법). 성가보다 훨씬 겹겹이 들림.",[1,3,4]],
@@ -312,61 +376,108 @@ const D=[
 [49,"XRCe86HVSJw",[0, 180, 360, 600],"베토벤 교향곡 9번 4악장 (L. van Beethoven - <Symphony No. 9> 4th Mvt.)","C","교향곡(합창)","‘환희의 송가’. 첼로·베이스가 주제를 조용히 꺼낸 뒤, 독창과 합창이 독일어로 부름.",[44,8,37]]
 ];
 const H={"1": ["남성 합창, 반주 없음", "중세 · 어둡고 엄숙함", "모두가 한 줄 선율만 함께 부르고, 박자가 일정하지 않고 자유롭게 흐름"], "2": ["무반주 혼성 합창(여러 성부)", "르네상스 · 고요하고 경건함", "한 성부가 부른 선율을 다른 성부가 차례로 따라 들어옴"], "3": ["작은 성악 앙상블(5명 안팎)", "르네상스 · 세속적이고 감정 표현이 풍부함", "가사 뜻에 따라 갑자기 느려지거나 화음이 짙어지는 등 표현이 극적임"], "4": ["독창 + 류트(또는 건반) 반주", "초기 바로크 · 부드럽고 애틋함", "합창이 아닌 한 사람의 노래가 중심이고, 반주는 화음만 짚어줌"], "5": ["바이올린 독주 + 현악 합주", "바로크 · 단조, 긴장감", "현악기가 같은 음을 짧게 반복하며 덜덜 떠는 소리가 겹겹이 쌓임"], "6": ["바이올린 독주 + 현악 합주", "바로크 · 장조, 경쾌한 3박자", "사냥 나팔을 흉내 낸 듯한 선율과 쫓기는 듯 빠른 바이올린"], "7": ["바이올린 독주 + 현악 합주", "바로크 · 장조, 밝고 화사함", "힘찬 합주 주제 뒤에 바이올린들이 트릴로 지저귀듯 연주"], "8": ["혼성 합창 + 관현악", "바로크 · 장조, 기쁘고 활기참", "한 음절을 빠르게 굴리는 선율 뒤, 합창 전체가 짧은 단어들을 힘차게 외침"], "9": ["고음 독창 + 현악", "바로크 · 느린 3박자, 애절함", "둘째 박에 무게가 실리는 느린 춤 리듬, 단순한 선율이 반복됨"], "10": ["독창 + 현악", "바로크 · 아주 느림, 평온함", "현악의 부드러운 도입 뒤 첫 음을 아주 길게 끌며 노래가 시작됨"], "11": ["하프시코드 독주", "바로크 · 빠르고 화려함", "한 음을 빠르게 여러 번 연타하고, 기타를 긁는 듯한 화음이 나옴"], "12": ["플루트 · 바이올린 · 하프시코드 + 현악", "바로크 · 장조, 활기찬 합주", "하프시코드가 반주를 넘어 주인공처럼 길고 화려하게 혼자 달림"], "13": ["소프라노 독창 + 리코더 2대", "바로크 · 목가적이고 평화로움", "리코더 두 대가 나란히 부드럽게 노래하며 반주함"], "14": ["혼성 합창 + 관현악", "바로크 · 장조, 따뜻하게 흐르는 느낌", "셋잇단음표로 끊임없이 흐르는 기악 선율 위에 합창이 느린 찬송가를 부름"], "15": ["현악 합주", "바로크 · 느리고 고요함", "위에서는 긴 음이 길게 이어지고, 아래 베이스는 옥타브로 또박또박 걸어감"], "16": ["건반 독주", "바로크 · 잔잔하고 명상적", "뚜렷한 선율 없이 같은 모양의 분산화음 패턴이 반복되며 화음만 바뀜"], "17": ["바이올린 2대 + 현악", "바로크 · 느리고 서정적", "두 바이올린이 같은 선율을 시간차로 주고받으며 엇갈림"], "18": ["건반 독주", "바로크 · 느린 3박자, 섬세함", "꾸밈음이 아주 많이 달린 우아한 선율"], "19": ["첼로 한 대, 반주 없음", "바로크 · 장조, 잔잔하게 흐름", "낮은 음과 높은 음을 오가는 분산화음이 물결치듯 반복됨"], "20": ["파이프 오르간 독주", "바로크 · 단조, 강렬하고 웅장함", "높은 음의 짧은 꾸밈음 뒤 낮은 곳으로 쏟아져 내려가는 도입"], "21": ["오보에 독주 + 현악", "바로크 · 단조, 느리고 구슬픔", "현악이 조용히 화음을 짚는 위로 오보에가 길게 노래함"], "22": ["피아노 독주", "고전 · 장조, 쉽고 경쾌함", "도-미-솔 화음을 오르내리는 짧고 단순한 행진곡풍 주제"], "23": ["피아노 독주", "고전 · 장조, 활발함", "화음을 힘차게 친 뒤 빠른 음계와 아르페지오로 달림"], "24": ["관현악", "고전 · 장조, 조용하고 소박함", "작게 반복되던 단순한 주제 끝에 갑자기 아주 큰 화음이 터짐"], "25": ["관현악", "고전 · 장조, 차분하게 걷는 느낌", "바순과 현악 피치카토가 일정한 똑딱 리듬을 계속 반복함"], "26": ["현악기 4대", "고전 · 장조, 밝고 상쾌함", "아래 세 악기가 짧게 끊어 반주하고, 제1바이올린이 높은 음역에서 날아오르듯 노래함"], "27": ["현악기 4대", "고전 · 장조, 느리고 장엄한 찬가", "하나의 찬가 선율을 악기들이 돌아가며 맡고, 나머지가 그 주위를 장식함"], "28": ["첼로 독주 + 관현악", "고전 · 장조, 밝고 당당함", "오케스트라 도입 뒤 첼로가 높은 음역까지 화려하게 움직임"], "29": ["트럼펫 독주 + 관현악", "고전 · 장조, 빠르고 경쾌함", "같은 주제가 계속 되돌아오고, 트럼펫이 빠른 음을 가볍게 굴림"], "30": ["피아노 독주", "고전 · 장조, 귀엽고 단순함", "아주 익숙한 동요 선율이 나오고, 이어 점점 화려하게 모양이 바뀜"], "31": ["관현악", "고전 · 단조, 불안하고 빠름", "서두 없이 바이올린이 짧은 한숨 같은 동기를 빠르게 반복하며 시작함"], "32": ["관현악", "고전 · 단조, 격렬함", "현악 전체가 당김음으로 쿵쿵 시작하고, 오보에가 길게 울림"], "33": ["현악 합주", "고전 · 장조, 밝고 우아함", "모두 함께 위로 치솟는 화음 동기로 힘차게 시작함"], "34": ["혼성 합창 + 관현악", "고전 · 단조, 슬프고 장중함", "현악이 흐느끼듯 짧게 끊는 음형 위에 합창이 한 단계씩 올라가며 커짐"], "35": ["혼성 합창 + 관현악", "고전 · 단조, 위엄 있고 무서움", "오케스트라의 날카로운 부점 리듬 뒤 합창이 짧은 한 마디를 크게 외침"], "36": ["피아노 독주 + 관현악", "고전 · 장조, 꿈꾸듯 서정적", "약음기 낀 현악의 셋잇단 반주 위로 피아노가 노래함"], "37": ["혼성 합창 + 관현악 + 타악기", "고전 · 장조, 떠들썩한 축제 분위기", "심벌즈 · 트라이앵글 · 큰북이 요란하게 울리는 이국풍 소리"], "38": ["소프라노 독창 + 관현악", "고전 · 단조, 분노에 찬 격렬함", "아주 높은 음에서 짧게 끊어 굴리는 기교가 연달아 나옴"], "39": ["바이올린 독주 + 관현악", "고전 · 장조, 밝고 화사함", "밝은 오케스트라 뒤 바이올린 독주가 처음엔 느리게 들어왔다가 빠르게 바뀜"], "40": ["피아노 독주", "고전 · 장조, 깔끔하고 단정함", "왼손이 도-솔-미-솔 반주를 반복하고, 오른손 선율 뒤 음계가 내달림"], "41": ["피아노 독주", "고전 · 단조로 시작, 빠르고 경쾌함", "빠르고 짧은 음표들 뒤, 왼손이 쿵짝쿵짝 군악대처럼 두드림"], "42": ["피아노 독주", "고전 · 단조, 비장하고 어두움", "왼손이 같은 화음을 쾅쾅 반복하는 위로 오른손이 비장한 선율을 연주함"], "43": ["클라리넷 독주 + 관현악", "고전 · 장조, 느리고 따뜻함", "둥글고 부드러운 목관 음색이 느린 선율을 길게 노래함"], "44": ["대규모 관현악(금관 강조)", "고전 · 장조, 승리감과 환희", "금관이 가세해 팡파르처럼 도-미-솔이 힘차게 터짐"], "45": ["바이올린 + 피아노", "고전 · 장조, 밝고 화창함", "바이올린이 유려하게 노래하는 선율로 바로 시작함"], "46": ["피아노 독주", "고전 · 장조, 느리고 따뜻함", "가운데 음역에서 노래하듯 흐르는 선율, 아래에서 잔잔한 반주"], "47": ["피아노 독주", "고전 · 단조, 격정적", "쉬지 않고 휘몰아치는 빠른 음표, 끝으로 갈수록 더 빨라짐"], "48": ["피아노 독주 + 관현악", "고전 · 장조, 웅장하고 당당함", "오케스트라가 큰 화음을 치면 피아노가 화려한 즉흥풍 패시지로 응답함"], "49": ["관현악 + 독창 + 합창", "고전 · 장조, 장대함", "단순한 주제가 낮은 현에서 조용히 나와 점점 커지고, 결국 사람 목소리가 함께함"]};
+const NOTES=[["intro","시대 구분","",[[true,"Common practice periods(조성음악의 시대): 바로크 1600–1750 · 고전 1750–1820 · 낭만 c.1800–1910 · 20~21세기. 수업에서는 이 넷을 '4 common practice periods'로 가르쳐요.",[]],[false,"그 이전: 고대 그리스 → 중세(c.1000–1400) → 르네상스(c.1400–1600).",[]],[false,"classics(고전) / classical music(클래식 음악) / classical period(고전주의 시대)는 서로 다른 뜻.",[]],[false,"시험 형식(최근): 객관식 25문항 + 듣기 15문항, 4지선다. 듣기는 수업 시간에 들은 부분이 나와요.",[]]]],["greek","고대 그리스","",[[true,"피타고라스: 대장간 망치 소리에서 음정의 원리를 발견. 망치 무게 12·9·8·6 → 2:1 옥타브, 3:2 완전5도, 4:3 완전4도, 9:8 온음.",[]],[false,"플라톤·아리스토텔레스: 음악은 이상, 교육의 핵심 요소, 인간의 선(善).",[]],[true,"그리스 선법(modes): Ionian, Dorian, Phrygian, Lydian, Mixolydian, Aeolian, Locrian. 장조·단조가 아니라 '선법'.",[]]]],["medieval","중세","c.1000–1400",[[true,"그레고리오 성가(Gregorian chant): 서양음악의 기원, 교황 그레고리오 1세. 라틴어 가사 · 무반주(a cappella) · 남성(수도사) · 단선율(monophony). 예: Dies Irae(진노의 날).",[1]],[false,"a cappella = '예배당(교회) 방식으로' → 무반주 합창.",[]],[true,"세속음악: 트루바두르(남프랑스, 시인·작곡가·연주자, 떠돌며 노래), 트루베르, 마이스터징어(독일 장인 가수), 종글뢰르(떠돌이 악사·곡예사).",[]],[true,"네우마(Neuma, 9세기): 최초의 기보 체계.",[]],[true,"귀도 다레초(Guido d'Arezzo, 11세기): 계이름(ut-re-mi-fa-sol-la, 헥사코드) 창안, 선을 쓰는 기보법의 기초.",[]],[true,"오르가눔(Organum, 9세기~): 초기 다성음악(polyphony). 중세에 시작돼 르네상스에서 다성음악이 정점에 이름. → 르네상스 장르가 아니에요.",[]],[false,"페로탱(12세기, 4성부), 마쇼(14세기, 4성부).",[]]]],["texture","짜임새 용어","",[[true,"monophony(단선율·단성): 한 줄 선율만. 예: 그레고리오 성가.",[1]],[true,"polyphony(다성): 독립적인 여러 성부가 동시에. 예: 캐논, 푸가, 르네상스 합창.",[2]],[true,"homophony(화성음악): 주선율 하나 + 화음 반주. 오늘날 대부분의 노래. 바로크에서 유행. (homophony를 '단성음악'이라 부르지 않도록 주의)",[4]]]],["renaissance","르네상스","c.1400–1600",[[false,"이탈리아·프랑스의 교회음악과 세속음악, 15세기부터 영국·네덜란드 음악. 인문주의(인간 중심)의 시대라 세속음악이 크게 발전.",[]],[false,"교회: 미사(mass), 모테트(motet) / 세속: 프로톨라, 샹송, 마드리갈.",[]],[true,"마드리갈(madrigal): 16세기 이탈리아, 다성 · 무반주 · 세속 · 서정적 가사. 르네상스의 대표 세속 성악곡.",[3]],[true,"조스캥 데 프레(1440–1521): 캐논(돌림노래)·대위법, 바로크에 영향.",[2]],[true,"팔레스트리나: 16세기 로마 가톨릭 교회음악, 다성음악의 대가.",[]],[false,"종교개혁 – 마르틴 루터: 루터교 찬송가 '코랄(choral)', 4성부 화성음악. 다성음악은 회중이 따라 부르기 어려워 쉬운 코랄이 퍼짐.",[14]],[false,"춤곡: 볼타(Volta). 춤곡은 바로크에서 모음곡으로 발전.",[]]]],["baroque","바로크","1600–1750",[[true,"Baroque = barroco(포르투갈어) '일그러진 진주'. 끝(1750) = 바흐가 죽은 해.",[]],[true,"특징: Affect(정해진 하나의 감정, ↔ 낭만주의의 emotion), 직설적, 화성음악(homophony), 조성 체계, 장식음, 기악 발전, 세속음악 다양화, 통주저음(figured bass).",[]],[true,"바로크와 낭만주의의 공통 시대정신: 감정 표현.",[]],[true,"성악: 오페라, 오라토리오, 칸타타 (+ 수난곡, 미사).",[]],[true,"오페라: 카치니의 모노디(독창 + 반주)에서 출발. 내용은 신화 → 성경 → 인간 중심. 몬테베르디 〈오르페오〉, 데우스 엑스 마키나(신이 내려와 해결) 결말.",[4]],[true,"아리아(aria, 영어 air) vs 레치타티보(recitativo, 말하듯 노래하며 이야기 전개 → 이어서 아리아).",[]],[true,"오라토리오(sacred): 종교적 이야기, 아리아·레치타티보 있음, 의상·무대·연기 없음. 예: 헨델 〈메시아〉.",[8]],[true,"칸타타(sacred & secular): 'cantare(노래하다)'. 칸타타의 대가 바흐. vs 소나타 'sonare(울리다)' = 기악.",[13,14]],[true,"협주곡(concerto): '경쟁하다', tutti(전체) ↔ solo의 대비. 합주 협주곡(concerto grosso). 예: 브란덴부르크 협주곡.",[12]],[false,"소나타: 교회 소나타(sonata da chiesa), 실내 소나타(sonata da camera ≈ 모음곡). 코렐리 트리오 소나타.",[]],[true,"모음곡(suite): 춤곡 모음(알르망드, 사라방드 등). 바로크의 대표 기악곡. 변주곡도 바로크 기악.",[15,19]],[true,"악기: 비올라 다 감바(다리 사이에 끼움), 바이올린·첼로, 류트, 목관·금관(밸브 없는 자연 트럼펫), 건반 – 파이프 오르간, 하프시코드(=클라브생, 쳄발로, 버지널), 클라비코드. 하프시코드는 셈여림 조절이 어려움.",[20,11]],[false,"조성 체계: 라모 〈화성론〉. 으뜸음(tonic) = 첫째 음, 딸림음(dominant) = 다섯째 음.",[]],[true,"카스트라토: 변성기 전 거세한 남성 가수, 바로크 오페라에서 인기(파리넬리). 지금은 카운터테너(가성)가 대신.",[10]]]],["terms","음악 용어","",[[true,"Opus(Op.) = 작품번호. 작곡가별 작품 목록 번호: BWV(바흐), K.(쾨헬, 모차르트), Hob.(호보켄, 하이든), D.(도이치, 슈베르트).",[]],[false,"음자리표(clef), 박자표(time signature: 3/4 = 4분음표 한 박이 3개, 6/8 = 8분음표 한 박이 6개), 큰보표(grand staff), 조표(key signature), 마디(bar), 악장(movements = 큰 곡을 이루는 부분).",[]],[true,"빠르기(tempo): Lento·Largo(아주 느리게) – Adagio(느리게) – Andante(걷는 빠르기) – Moderato(보통) – Allegro(빠르게) – Vivace·Presto(아주 빠르게).",[]],[true,"셈여림(dynamics): pp – p – mp – mf – f – ff, crescendo(점점 세게) ↔ decrescendo·diminuendo(점점 여리게), sfz(그 음만 세게).",[]],[true,"절대음악(absolute music) ↔ 표제음악(program music).",[]],[true,"카덴차(cadenza): 협주곡에서 독주자가 기교를 뽐내는 부분.",[48]],[false,"바통(baton): 지휘봉.",[]]]],["baroque-comp","바로크 작곡가","",[[true,"프랑스 바로크: 륄리(지휘봉에 발을 찧어 염증으로 사망, 영화 〈왕의 춤〉), 쿠프랭, 라모. (코렐리는 이탈리아)",[]],[true,"비발디(1678–1741, 이탈리아): '빨간 머리 사제', 바이올린 명인, 바이올린 협주곡. 〈사계〉 = 바이올린 협주곡 4곡(여름 3악장 폭풍우). 〈글로리아〉.",[5,6,7]],[false,"텔레만(1681–1767, 독일): 타펠무지크(식탁 음악), 공개 연주회.",[]],[false,"D. 스카를라티(1685–1757, 이탈리아): 하프시코드 소나타. 스페인·포르투갈 궁정에서 활동.",[11]],[true,"J. S. 바흐(1685–1750, 독일): 대위법, 보수적, BWV, 독일+이탈리아 바로크, 교회 음악가(라이프치히 토마스 칸토르). 오페라는 없음. 19세기 멘델스존이 〈마태 수난곡〉(1829)으로 부활시킴.",[]],[true,"바흐 성악: 칸타타(교회·세속 모두), 수난곡(요한·마태), 오라토리오, 미사(b단조 미사).",[13,14]],[true,"바흐 기악: 모음곡, 협주곡, 변주곡(골드베르크 – 영화 〈양들의 침묵〉), 토카타. 〈평균율 클라비어 곡집〉 2권 48곡 = 장조 12 + 단조 12, '구약성서'(베토벤 피아노 소나타 32곡은 '신약성서').",[16,18,20]],[true,"바흐의 아들: W. F. 바흐, C. P. E. 바흐(감정과다 양식), J. C. 바흐(갈랑 양식 → 모차르트에게 큰 영향).",[]],[true,"헨델(1685–1759, 독일 출생 → 영국 귀화): 대중적, 왕실 음악가, 코즈모폴리턴, 화성음악. 오라토리오 〈메시아〉 · 〈솔로몬〉, 오페라 〈크세르크세스〉(라르고 'Ombra mai fu') · 〈리날도〉('Lascia ch'io pianga').",[8,9,10]],[false,"헨델 기악: 하프시코드 모음곡, 관현악 모음곡 〈왕궁의 불꽃놀이〉 · 〈수상 음악〉.",[]]]],["preclassical","전고전","",[[true,"로코코, 갈랑 양식(우아함, J. C. 바흐), 감정과다 양식(empfindsamer Stil, C. P. E. 바흐), 질풍노도(Sturm und Drang).",[]],[true,"포르테피아노(=피아노포르테=피아노): 1709 크리스토포리(이탈리아). 셈여림을 자유롭게.",[]],[false,"피아노 교육곡: 클레멘티, 두세크, 디아벨리, 쿨라우, 훔멜.",[22,23]]]],["classical","고전주의","1750–1820",[[true,"형식, 간결함, 명료함, 보편성. 프랑스 혁명(1789), 계몽주의, 인류애. 절대음악의 시대.",[]],[true,"제1 빈 악파: 하이든 · 모차르트 · 베토벤('하모베').",[]],[true,"글루크: 오페라 개혁(↔ 바로크 오페라), 〈오르페오와 에우리디체〉. 오페라 부파(희극), 징슈필(독일어, 레치타티보 없음).",[]],[true,"소나타 형식: 제시부(A, 1·2주제) → 발전부(B) → 재현부(A) (+코다). 보통 주제 2개. 장조 곡이면 1주제는 으뜸조, 2주제는 딸림조.",[31]],[true,"장르: 교향곡, 소나타(보통 3~4악장), 현악4중주(바이올린 2 · 비올라 · 첼로), 협주곡, 변주곡. 모음곡은 소나타 형식이 아님.",[]],[false,"고전 시대에 아직 없던 장르: 성격소품, 교향시, 리트(→ 낭만주의).",[]]]],["haydn","하이든","1732–1809, 오스트리아",[[true,"에스테르하지 후작이 오래 고용. Hob.(호보켄). '교향곡의 아버지', 별명 'Papa'.",[]],[true,"교향곡 106곡(놀람, 고별, 시계), 현악4중주 68곡(종달새, 황제 – 2악장이 독일 국가), 오라토리오 〈천지창조〉, 세속 오라토리오 〈사계〉, 소나타, 협주곡(첼로, 트럼펫).",[24,25,26,27,28,29]]]],["mozart","모차르트","1756–1791, 오스트리아",[[true,"신동. 영향: 갈랑 양식, 감정과다 양식, 이탈리아 음악(J. C. 바흐), 하이든(형식). 오페라 부파, 명료함·균형, 대위법, 독립적 음악가. K.(쾨헬). 600곡 이상.",[]],[true,"교향곡 41곡. 단조 교향곡은 25번과 40번 둘뿐(둘 다 g단조). 41번 '주피터' 4악장 푸가. 25번은 영화 〈아마데우스〉 오프닝.",[31,32]],[true,"피아노 소나타 18곡(K.310 a단조, K.331 터키 행진곡, K.545). 피아노 협주곡 21번(〈엘비라 마디간〉), 20번(d단조, 비극적). 클라리넷 협주곡 단 1곡. 바이올린 협주곡 5번. 첼로 협주곡은 없음.",[36,40,41,42,43,39]],[true,"오페라: 〈후궁으로부터의 도주〉(터키풍 타악기), 〈피가로의 결혼〉('Sull'aria' – 영화 〈쇼생크 탈출〉), 〈돈 조반니〉(석상이 주인공을 지옥으로), 〈마술피리〉(밤의 여왕 아리아, 하이 F). 마지막 오페라는 〈마술피리〉·〈티토 황제의 자비〉(1791).",[37,38]],[true,"〈레퀴엠〉: 미완성 유작, 최고의 합창곡 중 하나(라크리모사, 렉스 트레멘데). 그 밖에 〈아이네 클라이네 나흐트무지크〉, 디베르티멘토, 모테트 〈Exsultate jubilate〉.",[34,35,33]],[true,"영화 〈아마데우스〉(밀로시 포르만 감독, 피터 섀퍼 원작): 살리에리가 들려주는 모차르트 이야기.",[]]]],["beethoven","베토벤","1770–1827, 독일",[[true,"독일 본(Bonn) 출생. 'van'은 할아버지가 플랑드르(현 벨기에) 출신이라. 20대 초반 빈으로 이주. 고전과 낭만을 잇는 다리, 혁신, 프리랜서, 절대음악, 구조, 동기(motive), 대위법, 즉흥연주.",[]],[true,"교향곡 9곡: 3번 '영웅'(나폴레옹), 5번 '운명'(동기 발전), 6번 '전원'(디즈니 〈판타지아〉), 7번(영화 〈킹스 스피치〉), 9번 '합창'(실러 '환희의 송가', 교향곡에 처음으로 합창).",[44,49]],[true,"피아노 소나타 32곡('신약성서'): 8번 '비창', 14번 '월광'(별명일 뿐 표제음악 아님), 23번 '열정'. 바이올린 소나타 5번 '봄', 9번 '크로이처'.",[46,47,45]],[true,"협주곡: 피아노 협주곡 5곡(5번 '황제'), 바이올린 협주곡 1곡. 첼로 협주곡은 없음.",[48]],[true,"오페라는 〈피델리오〉 단 1곡, 미사는 2곡(C장조 미사, 장엄미사 Missa Solemnis). 현악4중주, 변주곡.",[]],[false,"기타: 로망스 F장조(바이올린), 바가텔 25번 〈엘리제를 위하여〉, 론도 카프리치오 〈잃어버린 동전에 대한 분노〉.",[]]]]];
+const MOCK=[{"id":"m1","title":"모의고사 1회","listen":[24,36,49,37,15,7,8,45,18,32,26,43,1,20,48],"qs":[{"q":"Which ratio of hammer weights did Pythagoras associate with the octave?","o":["3:2","4:3","2:1","9:8"],"a":[3],"e":"옥타브 2:1, 완전5도 3:2, 완전4도 4:3, 온음 9:8."},{"q":"Choose the correct statement about Gregorian chant.","o":["It was sung in German by mixed choirs.","It is monophonic and unaccompanied.","It was invented in the Baroque era.","It always used the five-line staff."],"a":[2],"e":"라틴어, 남성, 무반주, 단선율."},{"q":"Which of the following correctly matches the term and its meaning?","o":["monophony – melody with chordal accompaniment","homophony – one main melody with chords","polyphony – a single line of melody","heterophony – a canon in four voices"],"a":[2],"e":"homophony = 화성음악(주선율 + 화음). monophony는 단선율, polyphony는 다성."},{"q":"Organum is best described as ( ).","o":["early polyphonic music that began in the Middle Ages","a Baroque keyboard instrument","a Classical-period dance","a Romantic art song"],"a":[1],"e":"9세기 무렵 시작된 초기 다성음악. 르네상스의 장르가 아니에요."},{"q":"Who is known as the 'master of polyphony' who wrote Roman Catholic church music in the 16th century?","o":["Palestrina","Monteverdi","Telemann","Gluck"],"a":[1],"e":"팔레스트리나."},{"q":"Martin Luther's chorales for the Protestant church were mainly written in ( ).","o":["monophony for solo voice","four-voice homophony that congregations could sing","complex polyphony for professional choirs only","instrumental music without voices"],"a":[2],"e":"회중이 따라 부르기 쉬운 4성부 화성음악."},{"q":"Which of the following is NOT a characteristic of Baroque music?","o":["figured bass","ornamentation","the doctrine of 'affect'","the symphonic poem"],"a":[4],"e":"교향시는 19세기 리스트."},{"q":"Early Baroque opera developed from Caccini's ( ), a solo song with simple accompaniment.","o":["madrigal","monody","motet","fugue"],"a":[2],"e":"모노디 = 독창 + 통주저음 반주."},{"q":"In Monteverdi's <Orfeo>, a god appears at the end to solve the story. What is this device called?","o":["deus ex machina","da capo","basso continuo","cadenza"],"a":[1],"e":"데우스 엑스 마키나."},{"q":"Which statement about the oratorio is correct?","o":["It is always comic.","It has costumes, staging and acting like opera.","It tells a mostly sacred story without acting.","It is a genre for solo keyboard."],"a":[3],"e":"종교적 내용, 연기·무대 없음. 예: 〈메시아〉."},{"q":"Which word comes from the Italian 'cantare' (to sing)?","o":["sonata","toccata","cantata","concerto"],"a":[3],"e":"cantata ↔ sonata(sonare, 울리다)."},{"q":"Which instrument was held between the player's legs and was popular in the Baroque era?","o":["viola da gamba","tuba","saxophone","celesta"],"a":[1],"e":"비올라 다 감바('다리의 비올라')."},{"q":"Which of the following is another name for the harpsichord?","o":["fortepiano","cembalo","clavichord","pipe organ"],"a":[2],"e":"하프시코드 = 클라브생 = 쳄발로."},{"q":"Which composer is correctly matched with his nationality?","o":["Vivaldi – Germany","Lully – Italy-born, French Baroque","D. Scarlatti – England","Telemann – France"],"a":[2],"e":"륄리는 이탈리아 태생이지만 프랑스 궁정에서 활동한 프랑스 바로크 작곡가. 비발디 – 이탈리아, 스카를라티 – 이탈리아(스페인 궁정), 텔레만 – 독일."},{"q":"Vivaldi's <The Four Seasons> is a set of ( ).","o":["four symphonies","four violin concertos","four oratorios","four piano sonatas"],"a":[2],"e":"바이올린 협주곡 4곡."},{"q":"What is Telemann's <Tafelmusik> known as?","o":["church music for Easter","'table music' for banquets","a set of organ fugues","an opera about kings"],"a":[2],"e":"식탁 음악. 공개 연주회와도 관련."},{"q":"J. S. Bach's <Well-Tempered Clavier> consists of ( ).","o":["2 books, 48 pieces in all major and minor keys","1 book of 12 sonatas","6 suites for cello","32 piano sonatas"],"a":[1],"e":"2권 48곡, 장조 12 + 단조 12. '구약성서'."},{"q":"Which of the following was NOT composed by J. S. Bach?","o":["Mass in B minor","Brandenburg Concertos","Water Music","Goldberg Variations"],"a":[3],"e":"〈수상 음악〉은 헨델."},{"q":"Which of J. S. Bach's sons is associated with the 'empfindsamer Stil'?","o":["W. F. Bach","C. P. E. Bach","J. C. Bach","O. J. Bach"],"a":[2],"e":"C. P. E. 바흐 – 감정과다 양식, J. C. 바흐 – 갈랑 양식."},{"q":"Choose the correct statement about Handel.","o":["He spent his whole life as a church organist in Leipzig.","He was born in Germany and later became a British subject.","He wrote no operas.","He was a student of Mozart."],"a":[2],"e":"독일 출생 → 영국 귀화, 오페라 다수."},{"q":"Which Baroque singers were castrated before puberty to keep a high voice?","o":["countertenors","castrati","troubadours","meistersingers"],"a":[2],"e":"카스트라토(파리넬리). 카운터테너는 가성으로 노래."},{"q":"Which is the correct order from slowest to fastest?","o":["Allegro – Andante – Largo","Largo – Andante – Allegro","Andante – Largo – Presto","Presto – Allegro – Adagio"],"a":[2],"e":"Largo(아주 느리게) < Andante(걷는 빠르기) < Allegro(빠르게)."},{"q":"In sonata form, which section comes between the exposition and the recapitulation?","o":["coda","development","introduction","trio"],"a":[2],"e":"제시부 → 발전부 → 재현부."},{"q":"How many symphonies did Haydn compose, and how many string quartets?","o":["9 and 16","41 and 23","106 and 68","32 and 5"],"a":[3],"e":"교향곡 106곡, 현악4중주 68곡."},{"q":"Which of Haydn's works has a melody later used as the German national anthem?","o":["'Surprise' Symphony","'Emperor' String Quartet","'The Lark' String Quartet","Trumpet Concerto"],"a":[2],"e":"현악4중주 '황제' 2악장."}]},{"id":"m2","title":"모의고사 2회","listen":[9,31,12,42,25,22,35,21,5,11,14,2,44,46,39],"qs":[{"q":"Which of the following belongs to the Greek modes?","o":["Dorian","Major","Chromatic","Twelve-tone"],"a":[1],"e":"그리스 선법: Ionian, Dorian, Phrygian, Lydian, Mixolydian, Aeolian, Locrian."},{"q":"Which of the following is a secular musician of the Middle Ages?","o":["Pope Gregory I","troubadour","castrato","Kapellmeister"],"a":[2],"e":"트루바두르(남프랑스)."},{"q":"In which century did Guido d'Arezzo develop solmization?","o":["9th century","11th century","15th century","17th century"],"a":[2],"e":"11세기. 네우마는 9세기."},{"q":"Which genre is a polyphonic, unaccompanied, secular Italian song of the 16th century?","o":["madrigal","oratorio","chorale","sonata da chiesa"],"a":[1],"e":"마드리갈."},{"q":"Josquin des Prez is best known for ( ).","o":["the invention of the piano","canons and counterpoint that influenced the Baroque era","writing the first symphony","founding opera buffa"],"a":[2],"e":"캐논·대위법."},{"q":"What does the word 'Baroque' (from Portuguese 'barroco') originally mean?","o":["a broken mirror","a misshapen pearl","a golden crown","a wild horse"],"a":[2],"e":"일그러진 진주."},{"q":"Which of the following does NOT belong to the 'four common practice periods' taught in this class?","o":["Baroque","Classical","Romantic","Medieval"],"a":[4],"e":"수업 기준 4 common practice periods: 바로크·고전·낭만·20세기 이후."},{"q":"In opera, which part tells the story in a speech-like way, usually before an aria?","o":["overture","recitative","chorus","cadenza"],"a":[2],"e":"레치타티보."},{"q":"Which statement about the Baroque concerto is correct?","o":["It contrasts soloists (solo) with the full ensemble (tutti).","It never uses the harpsichord.","It was invented in the 19th century.","It is always for voice and organ."],"a":[1],"e":"tutti ↔ solo. 합주 협주곡(concerto grosso)."},{"q":"Which of the following is the most representative instrumental genre of the Baroque, made of a series of dances?","o":["suite","symphony","string quartet","nocturne"],"a":[1],"e":"모음곡(알르망드, 사라방드 등)."},{"q":"Who wrote the <Treatise on Harmony>, important for the tonal system?","o":["J. P. Rameau","F. Couperin","A. Vivaldi","G. F. Handel"],"a":[1],"e":"라모 〈화성론〉."},{"q":"Which keyboard instrument is NOT typical of the Baroque period?","o":["harpsichord","clavichord","pipe organ","modern grand piano"],"a":[4],"e":"현대 그랜드 피아노는 19세기 이후."},{"q":"Choose the INCORRECT statement about J. S. Bach.","o":["He worked mainly as a church musician.","He wrote both sacred and secular cantatas.","He composed many operas for Venice.","His works are catalogued as BWV."],"a":[3],"e":"바흐는 오페라가 없어요."},{"q":"Which piece by Bach was used in the film 'The Silence of the Lambs'?","o":["Air on the G String","Goldberg Variations","Sheep May Safely Graze","Toccata and Fugue in D minor"],"a":[2],"e":"골드베르크 변주곡. 'Sheep(양)'과 헷갈리지 않기."},{"q":"Which work by Handel contains the famous 'Largo' ('Ombra mai fu')?","o":["Messiah","Rinaldo","Xerxes","Solomon"],"a":[3],"e":"오페라 〈크세르크세스(세르세)〉."},{"q":"Who invented the fortepiano around the early 18th century?","o":["Cristofori","Stradivari","Silbermann","Clementi"],"a":[1],"e":"크리스토포리(1709, 수업 기준)."},{"q":"Which style of the pre-Classical period is light and elegant, associated with J. C. Bach?","o":["galant style","serialism","impressionism","verismo"],"a":[1],"e":"갈랑 양식."},{"q":"Who reformed opera in the Classical period with <Orfeo ed Euridice>?","o":["C. W. Gluck","C. Monteverdi","G. Caccini","R. Wagner"],"a":[1],"e":"글루크의 오페라 개혁."},{"q":"Which German comic opera form uses spoken dialogue instead of recitative?","o":["opera seria","singspiel","oratorio","madrigal comedy"],"a":[2],"e":"징슈필(예: 〈마술피리〉, 〈후궁으로부터의 도주〉)."},{"q":"Which two Mozart symphonies are in a minor key?","o":["No. 25 and No. 40","No. 39 and No. 41","No. 1 and No. 9","No. 35 and No. 36"],"a":[1],"e":"25번과 40번, 둘 다 g단조."},{"q":"Which Mozart opera has a scene where a stone statue drags the main character to hell?","o":["The Magic Flute","Don Giovanni","The Marriage of Figaro","The Abduction from the Seraglio"],"a":[2],"e":"〈돈 조반니〉."},{"q":"Which of the following did Mozart NOT compose?","o":["Clarinet Concerto","Requiem","Cello Concerto","Eine kleine Nachtmusik"],"a":[3],"e":"모차르트는 첼로 협주곡이 없어요(베토벤도 없음)."},{"q":"Choose the correct statement about Beethoven.","o":["He was born in the Netherlands.","He wrote one opera, <Fidelio>, and two masses.","He wrote 41 symphonies.","He never used the motive technique."],"a":[2],"e":"독일 본 출생, 교향곡 9곡, 오페라 1곡·미사 2곡."},{"q":"Beethoven's Symphony No. 6 was used in which Disney film?","o":["Fantasia","Frozen","Bambi","The Lion King"],"a":[1],"e":"〈판타지아〉 – 전원."},{"q":"The number of Beethoven's symphonies + the number of his piano concertos + the number of his violin concertos = ?","o":["13","15","16","19"],"a":[2],"e":"9 + 5 + 1 = 15."}]}];
+const TREND=["최근 형식은 듣기 15문항 + 객관식 25문항, 모두 4지선다예요. 듣기 보기는 '작곡가 – 작품'이고, 같은 작곡가나 같은 장르끼리 섞어서 헷갈리게 내요.","듣기에서 가장 많이 나온 곡: 모차르트 피아노 협주곡 21번(4번), 베토벤 교향곡 9번 · 〈후궁으로부터의 도주〉 피날레 · 하이든 '놀람'(각 3번), G선상의 아리아 · 비발디 '봄' · 〈메시아〉 · 베토벤 '봄' 소나타(각 2번).","거의 매번 나온 주제: 멘델스존의 바흐 부활, 〈양들의 침묵〉 = 골드베르크 변주곡, 베토벤 3·6·9번 부제, tutti ↔ solo, 작품번호(K. · Hob. · BWV), 귀도 다레초, 마드리갈, 그레고리오 성가 특징, 크리스토포리 피아노, 절대음악, 영화 〈아마데우스〉.","자주 나온 주제: 바로크 = 일그러진 진주, 륄리의 지휘봉, 독일 국가 = 하이든, 바흐는 오페라 없음, 모차르트 오페라 고르기, 바로크 대표 기악 = 모음곡, 카스트라토, 소나타 형식, 바흐의 아들들.","최근 변화: '옳은/틀린 설명을 고르시오' 같은 문장형 문제가 크게 늘었고, 계산 문제(작품 수 더하기)도 나왔어요. 영화와 연결된 문제는 꾸준히 나와요."];
 const HL=["편성","분위기","특징"];
-let hintN=0,clean=0,hinted=[];
 const S=D.map(d=>({no:d[0],vid:d[1],t:d[2],title:d[3],era:d[4],genre:d[5],clue:d[6],conf:d[7]}));
 const byNo=Object.fromEntries(S.map(s=>[s.no,s]));
 const $=id=>document.getElementById(id);
 const url=(s,t=s.t[0])=>`https://www.youtube.com/watch?v=${s.vid}${t?`&t=${t}s`:""}`;
-let pt=0;
 const fmt=t=>`${Math.floor(t/60)}:${String(t%60).padStart(2,"0")}`;
 const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const orig=s=>{const m=s.title.match(/\s\(([A-Z][\s\S]*)\)$/);return m?m[1]:s.title};
+const ko=s=>{const m=s.title.match(/^([\s\S]*?)\s\([A-Z]/);return m?m[1]:s.title};
+const LS={get(k,d){try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const isListen=q=>/^\[(Listening|듣기|감상)/.test(q.q);
 
-let count=20, era="all", queue=[], idx=0, score=0, wrongs=[];
-const store={get(){try{return JSON.parse(localStorage.getItem("mh-wrong")||"[]")}catch(e){return[]}},
-  set(v){try{localStorage.setItem("mh-wrong",JSON.stringify(v))}catch(e){}}};
+/* ---------- navigation ---------- */
+const VIEWS=["notes","lstudy","setup","q","result","mock","babo","paper","pres"];
+let curMode="study";
+function show(v){VIEWS.forEach(k=>$("view-"+k).hidden=k!==v);window.scrollTo({top:0})}
+function stopAll(){if(ready)try{player.stopVideo()}catch(e){};exStop();if(sReady)try{sPlayer.stopVideo()}catch(e){}}
+function setSub(view){
+  document.querySelectorAll(".sub button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.view===view));
+  LS.set("mh-view",view);stopAll();
+  if(view==="notes")show("notes");
+  else if(view==="lstudy")show("lstudy");
+  else if(view==="ltest"){show("setup");refreshWrong()}
+  else if(view==="mock"){mockMenu()}
+  else if(view==="babo"){show("babo");exEnter()}
+}
+function setMode(m,view){
+  curMode=m;$("mode-study").setAttribute("aria-pressed",m==="study");$("mode-test").setAttribute("aria-pressed",m==="test");
+  $("sub-study").hidden=m!=="study";$("sub-test").hidden=m!=="test";
+  setSub(view||(m==="study"?"notes":"ltest"));
+}
+$("mode-study").onclick=()=>setMode("study");
+$("mode-test").onclick=()=>setMode("test");
+document.querySelectorAll(".sub button").forEach(b=>b.onclick=()=>setSub(b.dataset.view));
 
+/* ---------- 필기 정리 ---------- */
+function buildNotes(){
+  const toc=$("toc"),box=$("notes");
+  NOTES.forEach(([id,title,span,items])=>{
+    const a=document.createElement("a");a.href="#n-"+id;a.textContent=title;a.onclick=e=>{e.preventDefault();$("n-"+id).scrollIntoView({behavior:"smooth"})};toc.appendChild(a);
+    const sec=document.createElement("div");sec.className="sec";sec.id="n-"+id;
+    const h=document.createElement("h2");h.textContent=title;if(span){const sm=document.createElement("small");sm.textContent=span;h.appendChild(sm)}sec.appendChild(h);
+    const ul=document.createElement("ul");
+    items.forEach(([star,text,songs])=>{const li=document.createElement("li");if(star){li.className="star";const b=document.createElement("span");b.className="badge";b.textContent="★";li.appendChild(b)}
+      li.appendChild(document.createTextNode(text));
+      if(songs.length){const d=document.createElement("div");songs.forEach(n=>{const s=byNo[n];const btn=document.createElement("button");btn.className="songlink";btn.textContent="▶ "+ko(s);btn.onclick=()=>{setMode("study","lstudy");sPlay(n)};d.appendChild(btn)});li.appendChild(d)}
+      ul.appendChild(li)});
+    sec.appendChild(ul);box.appendChild(sec)});
+}
+
+/* ---------- 리스닝 공부 (visible player) ---------- */
+let sPlayer=null,sReady=false,sCur=null,sPt=0,sEra="all";
+function sEnsure(cb){if(sReady){cb();return}if(!window.YT||!YT.Player){$("s-now").textContent="플레이어를 불러오는 중이에요. 잠시 후 다시 눌러주세요.";return}
+  if(!sPlayer)sPlayer=new YT.Player("syt",{width:"100%",height:"100%",playerVars:{rel:0,playsinline:1,iv_load_policy:3,origin:location.origin},events:{onReady:()=>{sReady=true;cb()},
+    onError:()=>{const s=byNo[sCur];$("s-now").innerHTML="";const a=document.createElement("a");a.href=url(s);a.target="_blank";a.rel="noopener";a.style.color="var(--accent)";a.textContent="이 영상은 여기서 재생이 안 돼요. 유튜브에서 열기";$("s-now").appendChild(a)}}})}
+function sPlay(n,keepPt){
+  const s=byNo[n];if(sCur!==n||!keepPt)sPt=0;sCur=n;
+  if(sEra!=="all"&&s.era!==sEra){sEra="all";buildSongs()}
+  document.querySelectorAll(".songs li").forEach(li=>li.classList.toggle("on",+li.dataset.no===n));
+  $("s-now").textContent=`${n}. ${ko(s)} · 구간 ${sPt+1}/${s.t.length} (${fmt(s.t[sPt])}~)`;
+  $("s-other").disabled=s.t.length<2;$("s-stop").disabled=false;
+  sEnsure(()=>sPlayer.loadVideoById({videoId:s.vid,startSeconds:s.t[sPt]}));
+}
+$("s-other").onclick=()=>{if(!sCur)return;sPt=(sPt+1)%byNo[sCur].t.length;sPlay(sCur,true)};
+$("s-stop").onclick=()=>{if(sReady)sPlayer.pauseVideo()};
+function buildSongs(){
+  const ul=$("songs");ul.innerHTML="";
+  ["M","R","B","C"].forEach(e=>{if(sEra!=="all"&&sEra!==e)return;const h=document.createElement("li");h.style.borderBottom="0";h.style.paddingBottom="0";h.innerHTML=`<span class="era"></span>`;h.firstChild.textContent=E[e];ul.appendChild(h);
+    S.filter(s=>s.era===e).forEach(s=>{const li=document.createElement("li");li.dataset.no=s.no;if(s.no===sCur)li.className="on";
+      li.innerHTML=`<button class="play" aria-label="재생">▶</button><div class="t"><span class="nm"></span><small class="og"></small><small class="cl"></small><details><summary>들을 때 포인트</summary><dl></dl></details></div>`;
+      li.querySelector(".nm").textContent=`${s.no}. ${ko(s)}`;li.querySelector(".og").textContent=orig(s);li.querySelector(".cl").textContent=`${s.genre} · ${s.clue}`;
+      const dl=li.querySelector("dl");H[s.no].forEach((h,i)=>{const dt=document.createElement("dt");dt.textContent=HL[i];const dd=document.createElement("dd");dd.textContent=h;dl.append(dt,dd)});
+      li.querySelector(".play").onclick=()=>sPlay(s.no);ul.appendChild(li)})});
+}
+chips("s-era",[["all","전체"],["M","중세"],["R","르네상스"],["B","바로크"],["C","고전"]],sEra,v=>{sEra=v;buildSongs()});
+
+/* ---------- 리스닝 테스트 ---------- */
+let count=20, era="all", queue=[], idx=0, score=0, wrongs=[], hintN=0, clean=0, hinted=[], pt=0, answered=false;
 function chips(rowId,opts,cur,cb){const row=$(rowId);row.innerHTML="";
   opts.forEach(([v,l])=>{const b=document.createElement("button");b.className="chip";b.textContent=l;
     b.setAttribute("aria-pressed",v===cur);b.onclick=()=>{cb(v);[...row.children].forEach(c=>c.setAttribute("aria-pressed",c===b))};row.appendChild(b)})}
 chips("count-row",[[10,"10문제"],[20,"20문제"],[49,"전체 49"]],count,v=>count=v);
 chips("era-row",[["all","전체"],["MRB","중세~바로크"],["C","고전"]],era,v=>era=v);
-
-function show(v){["setup","q","result","list","exam"].forEach(k=>$("view-"+k).hidden=k!==v)}
-function setTab(t){["quiz","list","exam"].forEach(k=>$("tab-"+k).setAttribute("aria-pressed",k===t))}
-function refreshWrong(){const w=store.get();$("wrong-count").textContent=w.length;$("retry-wrong").hidden=!w.length}
-
+let CLIP=LS.get("mh-clip",60);
+chips("clip-row",[[30,"30초"],[60,"1분"],[120,"2분"],[0,"끝까지"]],CLIP,v=>{CLIP=v;LS.set("mh-clip",v)});
+const lenLabel=()=>CLIP?(CLIP<60?CLIP+"초":CLIP/60+"분"):"끝까지";
+function refreshWrong(){const w=LS.get("mh-wrong",[]);$("wrong-count").textContent=w.length;$("retry-wrong").hidden=!w.length}
 function makeChoices(s){
   let pool=s.conf.filter(n=>byNo[n]);
   const others=shuffle(S.filter(x=>x.no!==s.no&&!pool.includes(x.no)&&x.era===s.era).map(x=>x.no));
-  pool=shuffle(pool).slice(0,3);
-  while(pool.length<3)pool.push(others.shift());
+  pool=shuffle(pool).slice(0,3);while(pool.length<3)pool.push(others.shift());
   return shuffle([s.no,...pool]).map(n=>byNo[n]);
 }
 function start(list){queue=shuffle(list);idx=0;score=0;wrongs=[];clean=0;hinted=[];show("q");render()}
-function render(){
-  const s=queue[idx];
-  $("prog-text").textContent=`${idx+1} / ${queue.length}`;
-  $("score-live").textContent=`맞힌 수 ${score}`;
-  $("bar").style.width=`${idx/queue.length*100}%`;
-  $("qno").textContent=`Q${idx+1}.`;
-  hintN=0;$("hint-list").innerHTML="";$("hint-btn").hidden=false;$("hint-btn").disabled=false;$("hint-btn").textContent="힌트 보기 (1/3)";
-  pt=Math.floor(Math.random()*s.t.length);answered=false;$("cover").hidden=false;setPeek(false);$("peek").hidden=false;if(ready)player.stopVideo();setListen(s);
-  $("other").hidden=s.t.length<2;
-  $("feedback").hidden=true;
-  const box=$("choices");box.innerHTML="";
-  makeChoices(s).forEach((c,i)=>{const b=document.createElement("button");
-    b.innerHTML=`<b>${"①②③④"[i]}</b><span></span>`;b.querySelector("span").textContent=c.title;
-    b.onclick=()=>answer(s,c,b);b.dataset.no=c.no;box.appendChild(b)});
-}
-let CLIP=60;try{const c=+localStorage.getItem("mh-clip");if(c>=0&&localStorage.getItem("mh-clip")!==null)CLIP=c}catch(e){}
 let player=null,ready=false,timer=null,failed=false;
 window.onYouTubeIframeAPIReady=()=>{player=new YT.Player("yt",{width:"100%",height:"100%",
   playerVars:{controls:0,disablekb:1,rel:0,playsinline:1,fs:0,iv_load_policy:3,origin:location.origin},
   events:{onReady:()=>{ready=true},onStateChange:onState,onError:onErr}})};
 function clip(){const s=queue[idx],t=s.t[pt],o={videoId:s.vid,startSeconds:t};if(CLIP)o.endSeconds=t+CLIP;return o}
-const lenLabel=()=>CLIP?(CLIP<60?CLIP+"초":CLIP/60+"분"):"끝까지";
-chips("clip-row",[[30,"30초"],[60,"1분"],[120,"2분"],[0,"끝까지"]],CLIP,v=>{CLIP=v;try{localStorage.setItem("mh-clip",v)}catch(e){}});
 function note(){const s=queue[idx];$("listen-note").textContent=`구간 ${pt+1}/${s.t.length} · ${lenLabel()} 재생`}
 function setListen(s){failed=false;note();if(ready)player.cueVideoById(clip())}
 function onState(e){const box=$("player-box");clearInterval(timer);
@@ -377,100 +488,61 @@ function onErr(){failed=true;const s=queue[idx];$("listen-note").innerHTML="";co
   a.textContent="이 영상은 여기서 재생이 안 돼요. 유튜브에서 열기";a.style.color="var(--accent)";$("listen-note").appendChild(a)}
 $("play").onclick=()=>{if(!ready){$("listen-note").textContent="플레이어를 불러오는 중이에요. 잠시 후 다시 눌러주세요.";return}player.loadVideoById(clip());
   setTimeout(()=>{const st=player.getPlayerState();if(!failed&&st!==1&&st!==3)$("listen-note").textContent="재생이 시작되지 않았어요. 아이폰·아이패드는 처음 한 번 가려진 화면을 직접 눌러야 소리가 나요."},2500)};
-let answered=false;
 function setPeek(on){$("peek").setAttribute("aria-pressed",on);$("peek").textContent=on?"다시 가리기":"광고가 나오면: 화면 잠깐 보기";if(!answered)$("cover").hidden=on}
 $("peek").onclick=()=>setPeek($("peek").getAttribute("aria-pressed")!=="true");
 $("stop").onclick=()=>{if(ready)player.pauseVideo()};
 $("other").onclick=()=>{const s=queue[idx];pt=(pt+1)%s.t.length;setListen(s);if(ready)player.loadVideoById(clip())};
+function render(){
+  const s=queue[idx];
+  $("prog-text").textContent=`${idx+1} / ${queue.length}`;$("score-live").textContent=`맞힌 수 ${score}`;
+  $("bar").style.width=`${idx/queue.length*100}%`;$("qno").textContent=`Q${idx+1}.`;
+  hintN=0;$("hint-list").innerHTML="";$("hint-btn").hidden=false;$("hint-btn").disabled=false;$("hint-btn").textContent="힌트 보기 (1/3)";
+  pt=Math.floor(Math.random()*s.t.length);answered=false;$("cover").hidden=false;setPeek(false);$("peek").hidden=false;if(ready)player.stopVideo();setListen(s);
+  $("other").hidden=s.t.length<2;$("feedback").hidden=true;
+  const box=$("choices");box.innerHTML="";
+  makeChoices(s).forEach((c,i)=>{const b=document.createElement("button");
+    b.innerHTML=`<b>${"①②③④"[i]}</b><span></span>`;b.querySelector("span").textContent=c.title;
+    b.onclick=()=>answer(s,c,b);b.dataset.no=c.no;box.appendChild(b)});
+}
 function answer(s,c,btn){
-  const ok=c.no===s.no;
+  if(answered)return;const ok=c.no===s.no;
   [...$("choices").children].forEach(b=>{b.disabled=true;if(+b.dataset.no===s.no)b.classList.add("correct")});
   if(!ok)btn.classList.add("wrong");
   if(ok){score++;if(hintN)hinted.push(s);else clean++}else wrongs.push(s);
-  const w=new Set(store.get());ok&&!hintN?w.delete(s.no):w.add(s.no);store.set([...w]);
+  const w=new Set(LS.get("mh-wrong",[]));ok&&!hintN?w.delete(s.no):w.add(s.no);LS.set("mh-wrong",[...w]);
   $("verdict").textContent=ok?(hintN?`정답이에요! (힌트 ${hintN}개 사용)`:"정답이에요! 힌트 없이 맞혔어요."):"아쉬워요. 정답은 아래 곡이에요.";
-  $("hint-btn").hidden=true;
-  $("verdict").className="verdict "+(ok?"ok":"bad");
-  $("meta").textContent=`${s.title} · ${E[s.era]} · ${s.genre}`;
-  $("explain").textContent="구별 포인트: "+s.clue;
-  $("score-live").textContent=`맞힌 수 ${score}`;
-  $("next").textContent=idx===queue.length-1?"결과 보기":"다음 문제";
+  $("hint-btn").hidden=true;$("verdict").className="verdict "+(ok?"ok":"bad");
+  $("meta").textContent=`${s.title} · ${E[s.era]} · ${s.genre}`;$("explain").textContent="구별 포인트: "+s.clue;
+  $("score-live").textContent=`맞힌 수 ${score}`;$("next").textContent=idx===queue.length-1?"결과 보기":"다음 문제";
   $("feedback").hidden=false;answered=true;$("cover").hidden=true;$("peek").hidden=true;$("next").focus();
 }
 $("next").onclick=()=>{if(ready)player.stopVideo();idx++;if(idx<queue.length)render();else finish()};
+function item(s){const li=document.createElement("li");
+  li.innerHTML=`<span class="n">${s.no}</span><span class="t"></span>`;
+  const t=li.querySelector(".t");t.textContent=s.title;const sm=document.createElement("small");sm.textContent=`${s.genre} · ${s.clue}`;t.appendChild(sm);return li}
 function finish(){
   show("result");refreshWrong();
   $("score").innerHTML=`${score}<small> / ${queue.length}</small>`;
   const r=score/queue.length;
-  $("result-msg").textContent=r===1?"전부 맞혔어요. 실전도 이대로만!":r>=.8?"거의 다 왔어요. 틀린 곡만 한 번 더 들어보세요.":r>=.5?"절반 넘게 맞혔어요. 곡 목록에서 구별 포인트를 복습해 보세요.":"아직 헷갈리는 곡이 많아요. 곡 목록에서 하나씩 들어보고 다시 도전해 보세요.";
+  $("result-msg").textContent=r===1?"전부 맞혔어요. 실전도 이대로만!":r>=.8?"거의 다 왔어요. 틀린 곡만 한 번 더 들어보세요.":r>=.5?"절반 넘게 맞혔어요. 리스닝 공부에서 구별 포인트를 복습해 보세요.":"아직 헷갈리는 곡이 많아요. 리스닝 공부에서 하나씩 들어보고 다시 도전해 보세요.";
   $("stat").innerHTML=`<span>힌트 없이 맞힘 <b>${clean}</b></span><span>힌트 쓰고 맞힘 <b>${hinted.length}</b></span><span>틀림 <b>${wrongs.length}</b></span>`;
-  const review=[...wrongs,...hinted];
-  $("wrong-wrap").hidden=!review.length;$("again-wrong").hidden=!review.length;
-  const ul=$("wrong-list");ul.innerHTML="";
-  wrongs.forEach(s=>ul.appendChild(item(s)));
-  hinted.forEach(s=>{const li=item(s);const t=document.createElement("span");t.className="tag";t.textContent=" 힌트 사용";li.querySelector(".t").prepend(t);ul.appendChild(li)});
+  const review=[...wrongs,...hinted];$("wrong-wrap").hidden=!review.length;$("again-wrong").hidden=!review.length;
+  const ul=$("wrong-list");ul.innerHTML="";wrongs.forEach(s=>ul.appendChild(item(s)));
+  hinted.forEach(s=>{const li=item(s);const t=document.createElement("span");t.className="tag";t.textContent="힌트 사용 ";li.querySelector(".t").prepend(t);ul.appendChild(li)});
 }
-function item(s){const li=document.createElement("li");
-  li.innerHTML=`<span class="n">${s.no}</span><span class="t"></span><a target="_blank" rel="noopener">듣기</a>`;
-  const t=li.querySelector(".t");t.textContent=s.title;const sm=document.createElement("small");sm.textContent=`${s.genre} · ${s.clue}`;t.appendChild(sm);
-  li.querySelector("a").href=url(s);return li}
-function buildList(){const box=$("list");box.innerHTML="";
-  ["M","R","B","C"].forEach(e=>{const h=document.createElement("h2");h.className="era";h.textContent=E[e];box.appendChild(h);
-    const ul=document.createElement("ul");ul.className="plain";S.filter(s=>s.era===e).forEach(s=>ul.appendChild(item(s)));box.appendChild(ul)})}
-
 $("start").onclick=()=>{let l=S.filter(s=>era==="all"||(era==="C"?s.era==="C":s.era!=="C"));start(shuffle(l).slice(0,Math.min(count,l.length)))};
-$("retry-wrong").onclick=()=>start(store.get().map(n=>byNo[n]).filter(Boolean));
+$("retry-wrong").onclick=()=>start(LS.get("mh-wrong",[]).map(n=>byNo[n]).filter(Boolean));
 $("again-wrong").onclick=()=>start([...wrongs,...hinted]);
-$("hint-btn").onclick=()=>{const s=queue[idx];if(hintN>=3)return;const li=document.createElement("li");li.innerHTML=`<b>${HL[hintN]}</b><span></span>`;li.querySelector("span").textContent=H[s.no][hintN];$("hint-list").appendChild(li);hintN++;$("hint-btn").textContent=hintN<3?`힌트 하나 더 (${hintN+1}/3)`:"힌트를 모두 봤어요";$("hint-btn").disabled=hintN>=3};
-$("tab-list").addEventListener("click",()=>{if(ready)player.stopVideo()});
 $("again").onclick=()=>{show("setup");refreshWrong()};
-$("tab-quiz").onclick=()=>{setTab("quiz");exStop();show("setup");refreshWrong()};
-$("tab-list").onclick=()=>{setTab("list");exStop();show("list")};
-$("tab-exam").onclick=()=>{setTab("exam");if(ready)player.stopVideo();show("exam");exEnter()};
+$("hint-btn").onclick=()=>{const s=queue[idx];if(hintN>=3)return;const li=document.createElement("li");li.innerHTML=`<b>${HL[hintN]}</b><span></span>`;li.querySelector("span").textContent=H[s.no][hintN];$("hint-list").appendChild(li);hintN++;$("hint-btn").textContent=hintN<3?`힌트 하나 더 (${hintN+1}/3)`:"힌트를 모두 봤어요";$("hint-btn").disabled=hintN>=3};
 
-/* ---------- 기출 풀기 (encrypted) ---------- */
-let EX=null,exQueue=[],exI=0,exScore=0,exWrong=[],exPt=0,ePlayer=null,eReady=false,eTimer=null,exAnswered=false;
-const exStore={get(){try{return JSON.parse(localStorage.getItem("mh-exw")||"[]")}catch(e){return[]}},set(v){try{localStorage.setItem("mh-exw",JSON.stringify(v))}catch(e){}}};
-const b64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
-async function exDecrypt(pw){
-  const blob=await (await fetch("exams.enc.json",{cache:"no-cache"})).json();
-  const base=await crypto.subtle.importKey("raw",new TextEncoder().encode(pw),"PBKDF2",false,["deriveKey"]);
-  const key=await crypto.subtle.deriveKey({name:"PBKDF2",salt:b64(blob.salt),iterations:blob.iter,hash:"SHA-256"},base,{name:"AES-GCM",length:256},false,["decrypt"]);
-  const pt=await crypto.subtle.decrypt({name:"AES-GCM",iv:b64(blob.iv)},key,b64(blob.ct));
-  return JSON.parse(new TextDecoder().decode(pt));
-}
-function exPane(p){["ex-lock","ex-menu","ex-q","ex-res","ex-errata-v"].forEach(k=>$(k).hidden=k!==p)}
-async function exEnter(){
-  if(EX){exMenu();return}
-  exPane("ex-lock");let saved=null;try{saved=localStorage.getItem("mh-expw")}catch(e){}
-  if(saved){$("ex-pw").value=saved;$("ex-remember").checked=true;exTry(saved,true)}
-}
-async function exTry(pw,silent){
-  $("ex-err").hidden=true;$("ex-unlock").disabled=true;$("ex-unlock").textContent="여는 중…";
-  try{EX=await exDecrypt(pw);
-    try{$("ex-remember").checked?localStorage.setItem("mh-expw",pw):localStorage.removeItem("mh-expw")}catch(e){}
-    exMenu();
-  }catch(e){
-    if(!silent){$("ex-err").textContent=(e&&e.name==="OperationError")?"비밀번호가 맞지 않아요. 띄어쓰기와 하이픈(-)까지 그대로 입력했는지 확인해 주세요.":"자료를 불러오지 못했어요. 인터넷 연결을 확인하고 다시 눌러주세요.";$("ex-err").hidden=false}
-  }finally{$("ex-unlock").disabled=false;$("ex-unlock").textContent="열기"}
-}
-$("ex-form").addEventListener("submit",e=>{e.preventDefault();const pw=$("ex-pw").value.trim();if(pw)exTry(pw,false)});
-$("ex-lockagain").onclick=()=>{EX=null;try{localStorage.removeItem("mh-expw")}catch(e){};$("ex-pw").value="";$("ex-remember").checked=false;exPane("ex-lock")};
+/* ---------- 공용 시험지 ---------- */
+let paper={origin:"mock",store:"mh-mockw",list:[]},exQueue=[],exI=0,exScore=0,exWrong=[],exPt=0,ePlayer=null,eReady=false,eTimer=null,exAnswered=false;
 const qid=(e,q)=>e.id+":"+q.n;
-function exAll(){const out=[];EX.exams.forEach(e=>e.qs.forEach(q=>out.push({e,q})));return out}
-function exMenu(){
-  exStop();exPane("ex-menu");const box=$("ex-list");box.innerHTML="";
-  EX.exams.forEach(e=>{const b=document.createElement("button");const nL=e.qs.filter(q=>/^\[(Listening|듣기|감상)/.test(q.q)).length;
-    b.innerHTML=`<span></span><small>${e.qs.length}문항${nL?` · 듣기 ${nL}`:""}</small>`;b.querySelector("span").textContent=e.title;
-    b.onclick=()=>exStart(e.qs.map(q=>({e,q})));box.appendChild(b)});
-  const w=exStore.get();$("ex-wrong").hidden=!w.length;$("ex-wrong-n").textContent=w.length+"문항";
-}
-$("ex-rand").onclick=()=>exStart(shuffle(exAll().filter(x=>x.e.kind==="mc")).slice(0,20));
-$("ex-wrong").onclick=()=>{const w=new Set(exStore.get());exStart(exAll().filter(x=>w.has(qid(x.e,x.q))))};
-$("ex-errata").onclick=()=>{const tb=$("errata-body");tb.innerHTML="";EX.errata.forEach(r=>{const tr=document.createElement("tr");r.forEach(c=>{const td=document.createElement("td");td.textContent=c;tr.appendChild(td)});tb.appendChild(tr)});exPane("ex-errata-v")};
-$("errata-back").onclick=exMenu;$("exq-quit").onclick=exMenu;$("exr-menu").onclick=exMenu;
-$("exr-retry").onclick=()=>exStart(exWrong.slice());
-function exStart(list){if(!list.length)return;exQueue=list;exI=0;exScore=0;exWrong=[];exPane("ex-q");exRender()}
+function paperStart(origin,list){if(!list.length)return;paper.origin=origin;paper.store=origin==="mock"?"mh-mockw":"mh-exw";exQueue=list;exI=0;exScore=0;exWrong=[];show("paper");exRender()}
+function paperBack(){exStop();if(paper.origin==="mock")mockMenu();else{show("babo");exMenu()}}
+$("exq-quit").onclick=paperBack;$("exr-menu").onclick=paperBack;
+$("exr-retry").onclick=()=>paperStart(paper.origin,exWrong.slice());
 function exSong(){const q=exQueue[exI].q;return q.s?byNo[q.s[exPt%q.s.length]]:null}
 function exClip(){const s=exSong(),t=s.t[exPt%s.t.length],o={videoId:s.vid,startSeconds:t};if(CLIP)o.endSeconds=t+CLIP;return o}
 function exStop(){clearInterval(eTimer);if(eReady)try{ePlayer.stopVideo()}catch(e){}}
@@ -486,38 +558,92 @@ function exState(e){const box=$("ex-player-box");clearInterval(eTimer);
 $("ex-play").onclick=()=>exEnsurePlayer(()=>ePlayer.loadVideoById(exClip()));
 $("ex-stop").onclick=()=>{if(eReady)ePlayer.pauseVideo()};
 $("ex-other").onclick=()=>{exPt++;exEnsurePlayer(()=>ePlayer.loadVideoById(exClip()))};
+function exSetPeek(on){$("ex-peek").setAttribute("aria-pressed",on);$("ex-peek").textContent=on?"다시 가리기":"광고가 나오면: 화면 잠깐 보기";if(!exAnswered)$("ex-cover").hidden=on}
+$("ex-peek").onclick=()=>exSetPeek($("ex-peek").getAttribute("aria-pressed")!=="true");
 function exRender(){
   exStop();exAnswered=false;const {e,q}=exQueue[exI];exPt=Math.floor(Math.random()*12);
   $("exq-prog").textContent=`${exI+1} / ${exQueue.length}`;$("exq-score").textContent=`맞힌 수 ${exScore}`;
   $("exq-bar").style.width=`${exI/exQueue.length*100}%`;
   $("exq-tag").textContent=`${e.title} · ${q.n}번`;$("exq-text").textContent=q.q;
-  const isL=/^\[(Listening|듣기|감상)/.test(q.q);
-  $("exq-listen").hidden=!q.s;$("exq-nolisten").hidden=!(isL&&!q.s);$("ex-cover").hidden=false;$("ex-lnote").textContent="";
+  $("exq-listen").hidden=!q.s;$("exq-nolisten").hidden=!(isListen(q)&&!q.s);$("ex-cover").hidden=false;exSetPeek(false);$("ex-peek").hidden=false;$("ex-lnote").textContent="";
   $("exq-fb").hidden=true;$("exq-x").hidden=true;$("exq-ans").hidden=true;$("exq-self").hidden=true;$("exq-next").hidden=false;
   const box=$("exq-choices");box.innerHTML="";
   if(e.kind==="short"){$("exq-short").hidden=false;box.hidden=true}
   else{$("exq-short").hidden=true;box.hidden=false;
     q.o.forEach((t,i)=>{const b=document.createElement("button");b.innerHTML=`<b>${"①②③④"[i]}</b><span></span>`;b.querySelector("span").textContent=t;b.onclick=()=>exAnswer(i+1,b);box.appendChild(b)})}
 }
-function exMark(ok){const {e,q}=exQueue[exI];const w=new Set(exStore.get());ok?w.delete(qid(e,q)):w.add(qid(e,q));exStore.set([...w]);if(ok)exScore++;else exWrong.push(exQueue[exI]);$("exq-score").textContent=`맞힌 수 ${exScore}`}
-function exShowFb(){const {q}=exQueue[exI];$("exq-exp").textContent=q.e||"";if(q.x){$("exq-x").textContent=q.x;$("exq-x").hidden=false}$("ex-cover").hidden=true;$("exq-fb").hidden=false;$("exq-next").textContent=exI===exQueue.length-1?"결과 보기":"다음 문제"}
+function exMark(ok){const {e,q}=exQueue[exI];const w=new Set(LS.get(paper.store,[]));ok?w.delete(qid(e,q)):w.add(qid(e,q));LS.set(paper.store,[...w]);if(ok)exScore++;else exWrong.push(exQueue[exI]);$("exq-score").textContent=`맞힌 수 ${exScore}`}
+function exShowFb(){const {q}=exQueue[exI];$("exq-exp").textContent=q.e||"";if(q.x){$("exq-x").textContent=q.x;$("exq-x").hidden=false}$("ex-cover").hidden=true;$("ex-peek").hidden=true;$("exq-fb").hidden=false;$("exq-next").textContent=exI===exQueue.length-1?"결과 보기":"다음 문제"}
 function exAnswer(pick,btn){
   if(exAnswered)return;exAnswered=true;const {q}=exQueue[exI];const ok=q.a.includes(pick);
   [...$("exq-choices").children].forEach((b,i)=>{b.disabled=true;if(q.a.includes(i+1))b.classList.add("correct")});if(!ok)btn.classList.add("wrong");
   exMark(ok);$("exq-verdict").textContent=ok?"정답이에요!":`아쉬워요. 정답은 ${q.a.map(a=>"①②③④"[a-1]).join(", ")}번이에요.`;$("exq-verdict").className="verdict "+(ok?"ok":"bad");exShowFb();$("exq-next").focus();
 }
-$("exq-reveal").onclick=()=>{const {q}=exQueue[exI];$("exq-short").hidden=true;$("exq-ans").textContent="답: "+q.ans;$("exq-ans").hidden=false;$("exq-verdict").textContent="스스로 채점해 보세요.";$("exq-verdict").className="verdict";$("exq-self").hidden=false;$("exq-next").hidden=true;exShowFb()};
+$("exq-reveal").onclick=()=>{const {q}=exQueue[exI];exAnswered=true;$("exq-short").hidden=true;$("exq-ans").textContent="답: "+q.ans;$("exq-ans").hidden=false;$("exq-verdict").textContent="스스로 채점해 보세요.";$("exq-verdict").className="verdict";$("exq-self").hidden=false;$("exq-next").hidden=true;exShowFb()};
 $("exq-ok").onclick=()=>{exMark(true);$("exq-self").hidden=true;$("exq-next").hidden=false;$("exq-next").focus()};
 $("exq-no").onclick=()=>{exMark(false);$("exq-self").hidden=true;$("exq-next").hidden=false;$("exq-next").focus()};
 $("exq-next").onclick=()=>{exI++;if(exI<exQueue.length)exRender();else exFinish()};
 function exFinish(){
-  exStop();exPane("ex-res");$("exr-score").innerHTML=`${exScore}<small> / ${exQueue.length}</small>`;
+  exStop();show("pres");$("exr-score").innerHTML=`${exScore}<small> / ${exQueue.length}</small>`;
   $("exr-wrapw").hidden=!exWrong.length;$("exr-retry").hidden=!exWrong.length;const ul=$("exr-list");ul.innerHTML="";
   exWrong.forEach(({e,q})=>{const li=document.createElement("li");li.innerHTML='<span class="n"></span><span class="t"></span>';li.querySelector(".n").textContent=q.n;const t=li.querySelector(".t");t.textContent=e.title;const sm=document.createElement("small");sm.textContent=q.q.slice(0,90);t.appendChild(sm);ul.appendChild(li)});
 }
-buildList();refreshWrong();
+
+/* ---------- 모의고사 ---------- */
+const MOCKX=MOCK.map(m=>{const e={id:m.id,title:m.title,kind:"mc"};const qs=[];
+  m.listen.forEach((n,i)=>{const s=byNo[n];let pool=[n,...s.conf.filter(c=>byNo[c]).slice(0,3)];
+    const others=S.filter(x=>x.era===s.era&&!pool.includes(x.no)).map(x=>x.no);while(pool.length<4)pool.push(others[(n+pool.length)%others.length]);
+    const rot=n%4;pool=pool.slice(rot).concat(pool.slice(0,rot));
+    qs.push({n:i+1,q:"[듣기] 들려주는 곡을 고르시오.",o:pool.map(x=>orig(byNo[x])),a:[pool.indexOf(n)+1],s:[n],e:`${ko(s)} — ${s.genre}. ${s.clue}`})});
+  m.qs.forEach((q,i)=>qs.push(Object.assign({n:i+16},q)));
+  return {e,qs}});
+function mockAll(){const out=[];MOCKX.forEach(({e,qs})=>qs.forEach(q=>out.push({e,q})));return out}
+function mockMenu(){
+  show("mock");const box=$("mock-list");box.innerHTML="";
+  MOCKX.forEach(({e,qs})=>{const b=document.createElement("button");b.innerHTML=`<span></span><small>${qs.length}문항 · 듣기 15</small>`;b.querySelector("span").textContent=e.title;b.onclick=()=>paperStart("mock",qs.map(q=>({e,q})));box.appendChild(b)});
+  const w=LS.get("mh-mockw",[]);$("mock-wrong").hidden=!w.length;$("mock-wrong-n").textContent=w.length+"문항";
+}
+$("mock-written").onclick=()=>paperStart("mock",shuffle(mockAll().filter(x=>!x.q.s)).slice(0,20));
+$("mock-wrong").onclick=()=>{const w=new Set(LS.get("mh-mockw",[]));paperStart("mock",mockAll().filter(x=>w.has(qid(x.e,x.q))))};
+TREND.forEach(t=>{const li=document.createElement("li");li.textContent=t;$("trend-list").appendChild(li)});
+
+/* ---------- 바보 (encrypted) ---------- */
+let EX=null;
+const b64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+async function exDecrypt(pw){
+  const blob=await (await fetch("b.json",{cache:"no-cache"})).json();
+  const base=await crypto.subtle.importKey("raw",new TextEncoder().encode(pw),"PBKDF2",false,["deriveKey"]);
+  const key=await crypto.subtle.deriveKey({name:"PBKDF2",salt:b64(blob.salt),iterations:blob.iter,hash:"SHA-256"},base,{name:"AES-GCM",length:256},false,["decrypt"]);
+  const pt=await crypto.subtle.decrypt({name:"AES-GCM",iv:b64(blob.iv)},key,b64(blob.ct));
+  return JSON.parse(new TextDecoder().decode(pt));
+}
+function exPane(p){["ex-lock","ex-menu","ex-errata-v"].forEach(k=>$(k).hidden=k!==p)}
+function exEnter(){if(EX){exMenu();return}exPane("ex-lock");const saved=LS.get("mh-expw",null);if(saved){$("ex-pw").value=saved;$("ex-remember").checked=true;exTry(saved,true)}}
+async function exTry(pw,silent){
+  $("ex-err").hidden=true;$("ex-unlock").disabled=true;$("ex-unlock").textContent="여는 중…";
+  try{EX=await exDecrypt(pw);$("ex-remember").checked?LS.set("mh-expw",pw):LS.set("mh-expw",null);exMenu()}
+  catch(e){if(!silent){$("ex-err").textContent=(e&&e.name==="OperationError")?"비밀번호가 맞지 않아요. 띄어쓰기와 하이픈(-)까지 그대로 입력했는지 확인해 주세요.":"자료를 불러오지 못했어요. 인터넷 연결을 확인하고 다시 눌러주세요.";$("ex-err").hidden=false}}
+  finally{$("ex-unlock").disabled=false;$("ex-unlock").textContent="열기"}
+}
+$("ex-form").addEventListener("submit",e=>{e.preventDefault();const pw=$("ex-pw").value.trim();if(pw)exTry(pw,false)});
+$("ex-lockagain").onclick=()=>{EX=null;LS.set("mh-expw",null);$("ex-pw").value="";$("ex-remember").checked=false;exPane("ex-lock")};
+function exAll(){const out=[];EX.exams.forEach(e=>e.qs.forEach(q=>out.push({e,q})));return out}
+function exMenu(){
+  exPane("ex-menu");const box=$("ex-list");box.innerHTML="";
+  EX.exams.forEach(e=>{const b=document.createElement("button");const nL=e.qs.filter(isListen).length;
+    b.innerHTML=`<span></span><small>${e.qs.length}문항${nL?` · 듣기 ${nL}`:""}</small>`;b.querySelector("span").textContent=e.title;
+    b.onclick=()=>paperStart("babo",e.qs.map(q=>({e,q})));box.appendChild(b)});
+  const w=LS.get("mh-exw",[]);$("ex-wrong").hidden=!w.length;$("ex-wrong-n").textContent=w.length+"문항";
+}
+$("ex-rand").onclick=()=>paperStart("babo",shuffle(exAll().filter(x=>x.e.kind==="mc")).slice(0,20));
+$("ex-wrong").onclick=()=>{const w=new Set(LS.get("mh-exw",[]));paperStart("babo",exAll().filter(x=>w.has(qid(x.e,x.q))))};
+$("ex-errata").onclick=()=>{const tb=$("errata-body");tb.innerHTML="";EX.errata.forEach(r=>{const tr=document.createElement("tr");r.forEach(c=>{const td=document.createElement("td");td.textContent=c;tr.appendChild(td)});tb.appendChild(tr)});exPane("ex-errata-v")};
+$("errata-back").onclick=exMenu;
+
+/* ---------- boot ---------- */
+buildNotes();buildSongs();
+{const v=LS.get("mh-view","notes");const testViews=["ltest","mock","babo"];setMode(testViews.includes(v)?"test":"study",v)}
 </script>
 <script src="https://www.youtube.com/iframe_api"></script>
-
 </body>
 </html>
