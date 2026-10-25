@@ -81,6 +81,8 @@ ul.plain a{flex:none;color:var(--accent);font-size:.85rem;font-weight:500}
 .cover{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--accent);color:var(--surface);text-align:center;padding:16px}
 .cover strong{font-family:var(--display);font-size:1.4rem}
 .cover span{font-size:.85rem;opacity:.85}
+.peek{font-size:.85rem;color:var(--muted);min-height:38px;padding:6px 12px;align-self:flex-start}
+.peek[aria-pressed="true"]{color:var(--accent);border-color:var(--accent)}
 .eq{display:flex;gap:4px;align-items:flex-end;height:28px}
 .eq i{width:5px;background:var(--surface);height:6px;border-radius:2px}
 .playing .eq i{animation:eq 0.9s ease-in-out infinite}
@@ -129,6 +131,7 @@ ul.plain a{flex:none;color:var(--accent);font-size:.85rem;font-weight:500}
     <div class="listen">
       <div class="player" id="player-box"><div id="yt"></div><div class="cover" id="cover"><div class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div><strong>소리만 듣고 맞혀보세요</strong><span id="cover-sub">답을 고르면 영상이 보여요</span></div></div>
       <div class="row"><button class="primary" id="play" style="flex:1">▶ 듣기</button><button id="stop">정지</button><button id="other">다른 구간</button></div>
+      <button id="peek" class="peek">광고가 나오면: 화면 잠깐 보기</button>
       <p class="note" id="listen-note"></p>
     </div>
     <div class="label">이 곡은?</div>
@@ -250,7 +253,7 @@ function render(){
   $("score-live").textContent=`맞힌 수 ${score}`;
   $("bar").style.width=`${idx/queue.length*100}%`;
   $("qno").textContent=`Q${idx+1}.`;
-  pt=Math.floor(Math.random()*s.t.length);$("cover").hidden=false;if(ready)player.stopVideo();setListen(s);
+  pt=Math.floor(Math.random()*s.t.length);answered=false;$("cover").hidden=false;setPeek(false);$("peek").hidden=false;if(ready)player.stopVideo();setListen(s);
   $("other").hidden=s.t.length<2;
   $("feedback").hidden=true;
   const box=$("choices");box.innerHTML="";
@@ -272,6 +275,9 @@ function onState(e){const box=$("player-box");clearInterval(timer);
 function onErr(){failed=true;const s=queue[idx];$("listen-note").innerHTML="";const a=document.createElement("a");a.href=url(s,s.t[pt]);a.target="_blank";a.rel="noopener";
   a.textContent="이 영상은 여기서 재생이 안 돼요. 유튜브에서 열기";a.style.color="var(--accent)";$("listen-note").appendChild(a)}
 $("play").onclick=()=>{if(!ready){$("listen-note").textContent="플레이어를 불러오는 중이에요. 잠시 후 다시 눌러주세요.";return}player.loadVideoById(clip())};
+let answered=false;
+function setPeek(on){$("peek").setAttribute("aria-pressed",on);$("peek").textContent=on?"다시 가리기":"광고가 나오면: 화면 잠깐 보기";if(!answered)$("cover").hidden=on}
+$("peek").onclick=()=>setPeek($("peek").getAttribute("aria-pressed")!=="true");
 $("stop").onclick=()=>{if(ready)player.pauseVideo()};
 $("other").onclick=()=>{const s=queue[idx];pt=(pt+1)%s.t.length;setListen(s);if(ready)player.loadVideoById(clip())};
 function answer(s,c,btn){
@@ -286,7 +292,7 @@ function answer(s,c,btn){
   $("explain").textContent="구별 포인트: "+s.clue;
   $("score-live").textContent=`맞힌 수 ${score}`;
   $("next").textContent=idx===queue.length-1?"결과 보기":"다음 문제";
-  $("feedback").hidden=false;$("cover").hidden=true;$("next").focus();
+  $("feedback").hidden=false;answered=true;$("cover").hidden=true;$("peek").hidden=true;$("next").focus();
 }
 $("next").onclick=()=>{if(ready)player.stopVideo();idx++;if(idx<queue.length)render();else finish()};
 function finish(){
